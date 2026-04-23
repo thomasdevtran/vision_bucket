@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import '../styles/auth.css';
-import loginOptions from '../assets/login.png'
 import visionBucket from '../assets/VisionBucket.png'
 import Footer from '../components/footer/footer';
 
@@ -65,19 +64,47 @@ function Auth() {
   };
 
   return (
-    <div className="App">
-      <div className="logo-container">
-        <img src={visionBucket} alt="Vision Bucket" className="logo" />
-      </div>
-      <div className="auth-container">
-        <div className="auth-form">
-          <h1>{isLogin ? 'Login' : 'Sign Up'}</h1>
-          
+    <div className="auth-page">
+      <div className="auth-shell">
+        <section className="auth-brand-panel">
+          <div className="auth-brand-lockup">
+            <img src={visionBucket} alt="Vision Bucket" className="auth-logo" />
+            <span className="auth-kicker">Movie tracking, reviews, and community</span>
+          </div>
+
+          <div className="auth-hero-copy">
+            <h1>Keep every watch, rating, and discussion in one place.</h1>
+            <p>
+              Vision Bucket brings your watch history, review notes, and community threads into
+              one clean space built for film fans.
+            </p>
+          </div>
+
+          <div className="auth-method-panel">
+            <p className="auth-method-heading">Available sign-in method</p>
+            <div className="auth-method-pill">Email and password</div>
+            <p className="auth-method-note">
+              Apple and Twitter sign-in have been removed from the UI.
+            </p>
+          </div>
+        </section>
+
+        <section className="auth-card">
+          <div className="auth-card-header">
+            <p className="auth-eyebrow">{isLogin ? 'Welcome back' : 'Create your account'}</p>
+            <h2>{isLogin ? 'Sign in to Vision Bucket' : 'Start your Vision Bucket profile'}</h2>
+            <p className="auth-subtext">
+              {isLogin
+                ? 'Jump back into your lists, reviews, and discussions.'
+                : 'Create an account to save movies, track progress, and join discussions.'}
+            </p>
+          </div>
+
           {error && <p className="error">{error}</p>}
-          
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email">Email:</label>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="auth-field">
+              <label htmlFor="email">Email</label>
               <input
                 type="email"
                 id="email"
@@ -87,8 +114,8 @@ function Auth() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password">Password:</label>
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
               <input
                 type="password"
                 id="password"
@@ -98,23 +125,22 @@ function Auth() {
               />
             </div>
 
-            <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
+            <button type="submit" className="primary-button">
+              {isLogin ? 'Sign In' : 'Create Account'}
+            </button>
           </form>
 
-          <p>
+          <p className="auth-switch">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
-            <button 
-              className="link-button" 
+            <button
+              type="button"
+              className="link-button"
               onClick={() => setIsLogin(!isLogin)}
             >
-              {isLogin ? 'Sign Up' : 'Login'}
+              {isLogin ? 'Sign up' : 'Log in'}
             </button>
           </p>
-        </div>
-
-        <div className="auth-image">
-          <img src={loginOptions} alt="Login Options" style={{ width: '450px', height: 'auto' }}/>
-        </div>
+        </section>
       </div>
       <Footer />
     </div>

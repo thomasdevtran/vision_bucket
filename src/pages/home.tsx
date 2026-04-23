@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getMoviesByGenre, getPopularMovies, Movie } from '../functions/api_service';
+import { getMoviesByGenre, Movie } from '../functions/api_service';
 import '../App.css';
 import Header from '../components/header/header';
 import Footer from '../components/footer/footer';
@@ -11,7 +11,6 @@ function Home() {
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [actionMovies, setActionMovies] = useState<Movie[]>([]);
   const [comedyMovies, setComedyMovies] = useState<Movie[]>([]);
   const navigate = useNavigate();
@@ -85,13 +84,26 @@ function Home() {
   return (
     <div className="App">
       <Header />
-      <main>
-        <h1>Welcome to Vision Bucket</h1>
-        <div className="movies-container">
+      <main className="page-main">
+        <section className="page-hero">
+          <p className="page-kicker">Discover your next watch</p>
+          <h1>Welcome back{username ? `, ${username}` : ''}.</h1>
+          <p className="page-description">
+            Explore curated shelves, save films to your lists, and keep your ratings and reviews in one
+            polished space.
+          </p>
+        </section>
 
-          <h2>Action Movies</h2>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          <div className="movies-grid">
+        <div className="movies-container">
+          <section className="content-section">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">Curated Picks</p>
+                <h2>Action Movies</h2>
+              </div>
+            </div>
+            {error && <p className="error-text">{error}</p>}
+            <div className="movies-grid">
             {actionMovies.map((movie) => (
               <div
                 key={movie.id}
@@ -100,25 +112,30 @@ function Home() {
                   console.log('Movie Data:', movie);
                   handleCardClick(movie.id);
                 }}
-                style={{ cursor: 'pointer', backgroundColor: '#222222' }}
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                   alt={movie.title}
-                  style={{ width: '100%', height: 'auto', maxHeight: '300px', objectFit: 'cover' }}
                 />
                 <div className="movie-info">
-                  <h3 style={{ color: '#ffffff' }}>{movie.title}</h3>
-                  <p style={{ color: '#ffffff' }}>{movie.release_date}</p>
-                  <p style={{ color: '#ffffff' }}>Rating: {movie.vote_average}/10</p>
+                  <h3>{movie.title}</h3>
+                  <p>{movie.release_date}</p>
+                  <p>Rating: {movie.vote_average}/10</p>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </section>
 
-          <h2>Comedy Movies</h2>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          <div className="movies-grid">
+          <section className="content-section">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">Lighter Nights</p>
+                <h2>Comedy Movies</h2>
+              </div>
+            </div>
+            {error && <p className="error-text">{error}</p>}
+            <div className="movies-grid">
             {comedyMovies.map((movie) => (
               <div
                 key={movie.id}
@@ -127,21 +144,20 @@ function Home() {
                   console.log('Movie Data:', movie);
                   handleCardClick(movie.id);
                 }}
-                style={{ cursor: 'pointer', backgroundColor: '#222222' }}
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                   alt={movie.title}
-                  style={{ width: '100%', height: 'auto', maxHeight: '300px', objectFit: 'cover' }}
                 />
                 <div className="movie-info">
-                  <h3 style={{ color: '#ffffff' }}>{movie.title}</h3>
-                  <p style={{ color: '#ffffff' }}>{movie.release_date}</p>
-                  <p style={{ color: '#ffffff' }}>Rating: {movie.vote_average}/10</p>
+                  <h3>{movie.title}</h3>
+                  <p>{movie.release_date}</p>
+                  <p>Rating: {movie.vote_average}/10</p>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </section>
         </div>
       </main>
       <Footer />

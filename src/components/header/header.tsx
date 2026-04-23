@@ -71,31 +71,35 @@ function Header() {
   };
 
   return (
-    <header className="header" >
-      <div className="header-content responsive" style={{ marginBottom: isSmallScreen ? '100px' : '0px' }}>
-        <div className="logo-container">
+    <header className="header">
+      <div className="header-content">
+        <div className="header-brand">
           <Link to="/">
             <img src={VisionBucket} alt="Vision Bucket" className="logo-image" />
           </Link>
         </div>
-        
+
         <div className="bottom-row">
           <form className="search-container" onSubmit={handleSearch}>
             <img src={searchIcon} alt="Search" className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
+            <input
+              type="text"
+              placeholder="Search movies, directors, or titles"
               className="search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
 
-          <div className="hamburger-menu" onClick={toggleUserMenu}>
-            <div className="hamburger-line"></div>
-            <div className="hamburger-line"></div>
-            <div className="hamburger-line"></div>
-          </div>
+          <button className="menu-toggle" type="button" onClick={toggleUserMenu}>
+            <span className="menu-avatar">
+              <img src={userIcon} alt="User menu" className="menu-avatar-icon" />
+            </span>
+            <span className="menu-meta">
+              <span className="menu-label">Account</span>
+              <span className="menu-value">{email || 'Guest'}</span>
+            </span>
+          </button>
           
           {showUserMenu && (
             <div className="user-menu">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { searchMovies, Movie } from '../functions/api_service';
 import '../App.css';
@@ -55,12 +55,17 @@ function SearchResults() {
     return (
       <div className="App">
         <Header />
-        <div style={{marginTop: '100px'}}></div>
-        <main>
-          <h1>Search Results for: {query}</h1>
+        <main className="page-main">
+          <section className="page-hero compact">
+            <p className="page-kicker">Search</p>
+            <h1>Results for "{query}"</h1>
+            <p className="page-description">
+              Browse matching movies and jump straight into details, reviews, and watch tracking.
+            </p>
+          </section>
   
           <div className="movies-container">
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="error-text">{error}</p>}
             <div className="movies-grid">
               {movies.map((movie) => (
                 <div 
@@ -70,16 +75,16 @@ function SearchResults() {
                     handleCardClick(movie.id);
                   }}
                   className="movie-card"
-                  style={{ cursor: 'pointer', backgroundColor: '#222222' }}
                 >
                   <img 
                     src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                     alt={movie.title}
-                    style={{ width: '200px', height: '300px', objectFit: 'cover' }}
                   />
-                  <h3 style={{ color: '#ffffff' }}>{movie.title}</h3>
-                  <p style={{ color: '#ffffff' }}>{movie.release_date}</p>
-                  <p style={{ color: '#ffffff' }}>Rating: {movie.vote_average}/10</p>
+                  <div className="movie-info">
+                    <h3>{movie.title}</h3>
+                    <p>{movie.release_date}</p>
+                    <p>Rating: {movie.vote_average}/10</p>
+                  </div>
                 </div>
               ))}
             </div>

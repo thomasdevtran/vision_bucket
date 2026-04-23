@@ -21,14 +21,15 @@ import ThreadNewsDetails from './pages/discussions/thread_news';
 // Firebase configuration
 // Note: In a production environment, these values should be stored in environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDb0vGZ7bvxqfXoKxmJzf7htUYrfKF31kA",
-  authDomain: "inf-124-10961.firebaseapp.com",
-  projectId: "inf-124-10961",
-  storageBucket: "inf-124-10961.firebasestorage.app",
-  messagingSenderId: "1038932690190",
-  appId: "1:1038932690190:web:00f9afc8f98149e5fe435f",
-  measurementId: "G-ME18D21GQY"
+  apiKey: "AIzaSyBxY9tsBg6zberK1oOFG93a9QwZ1UWZOSo",
+  authDomain: "visionbucket-3517c.firebaseapp.com",
+  projectId: "visionbucket-3517c",
+  storageBucket: "visionbucket-3517c.firebasestorage.app",
+  messagingSenderId: "639317626851",
+  appId: "1:639317626851:web:d55a82d6459173c9ee5ad6",
+  measurementId: "G-DZLHPZML99"
 };
+
 
 // Initialize Firebase before rendering the app
 const app = initializeApp(firebaseConfig);
