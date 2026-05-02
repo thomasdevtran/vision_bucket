@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
+import { API_BASE_URL } from '../config';
 import '../styles/auth.css';
 import Header from '../components/header/header';
 import Footer from '../components/footer/footer';
@@ -29,7 +30,7 @@ function Profile() {
         if (!user) return;
 
         // 1. Fetch review IDs
-        const res = await fetch(`http://localhost:5000/profile/reviews/${user.uid}`);
+        const res = await fetch(`${API_BASE_URL}/profile/reviews/${user.uid}`);
         const reviewIds = await res.json();
 
         // 2. Fetch each review's data
@@ -37,7 +38,7 @@ function Profile() {
           reviewIds.map(async (review: any) => {
             // If your /profile/reviews/:uid already returns full review objects, skip this fetch
             if (review.id && review.movieId) return review;
-            const r = await fetch(`http://localhost:5000/reviews/review/${review}`);
+            const r = await fetch(`${API_BASE_URL}/reviews/review/${review}`);
             return await r.json();
           })
         );
@@ -59,13 +60,13 @@ function Profile() {
 
     try {
       // 1. Delete review from Reviews collection
-      const response = await fetch(`http://localhost:5000/reviews/${docId}/${user.uid}`, {
+      const response = await fetch(`${API_BASE_URL}/reviews/${docId}/${user.uid}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete review');
 
       // 2. Remove reviewId from user's profile
-      await fetch(`http://localhost:5000/profile/update/${user.uid}/remove_review`, {
+      await fetch(`${API_BASE_URL}/profile/update/${user.uid}/remove_review`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewId: docId }),

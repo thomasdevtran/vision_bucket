@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { API_BASE_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import '../styles/auth.css';
 import visionBucket from '../assets/VisionBucket.png'
@@ -32,7 +33,7 @@ function Auth() {
         const currentDate = new Date().toISOString();
         
         // Create user profile in database
-        const response = await fetch(`http://localhost:5000/profile/create/${userCredential.user.uid}`, {
+        const response = await fetch(`${API_BASE_URL}/profile/create/${userCredential.user.uid}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

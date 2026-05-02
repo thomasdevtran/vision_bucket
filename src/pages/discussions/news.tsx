@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { Link } from 'react-router-dom';
 import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
@@ -21,7 +22,7 @@ function News() {
     const fetchThreads = async () => {
       try {
         console.log('Fetching news threads from backend...');
-        const response = await fetch('http://localhost:5000/news/posts');
+        const response = await fetch(`${API_BASE_URL}/news/posts`);
         if (!response.ok) {
           throw new Error('Failed to fetch news threads');
         }

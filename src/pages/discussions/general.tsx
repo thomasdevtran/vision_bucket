@@ -5,6 +5,7 @@ import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
 import DiscussionPreviews from '../../components/discussion/post_preview';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { API_BASE_URL } from '../../config';
 
 interface Thread {
   id: string;
@@ -28,7 +29,7 @@ function GeneralDiscussion() {
     const fetchThreads = async () => {
       try {
         console.log('Fetching threads from backend...');
-        const response = await fetch('http://localhost:5000/discussions/posts');
+        const response = await fetch('${API_BASE_URL}/discussions/posts');
         if (!response.ok) {
           throw new Error('Failed to fetch threads');
         }
@@ -77,7 +78,7 @@ function GeneralDiscussion() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/discussions/posting', {
+      const response = await fetch('${API_BASE_URL}/discussions/posting', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ function GeneralDiscussion() {
       const fetchThreads = async () => {
         try {
           console.log('Fetching threads from backend...');
-          const response = await fetch('http://localhost:5000/discussions/posts');
+          const response = await fetch('${API_BASE_URL}/discussions/posts');
           if (!response.ok) {
             throw new Error('Failed to fetch threads');
           }
@@ -135,7 +136,7 @@ function GeneralDiscussion() {
 
   const handleDeleteThread = async (threadId: string, uid: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/discussions/post/${threadId}/${uid}`, {
+      const response = await fetch(`${API_BASE_URL}/discussions/post/${threadId}/${uid}`, {
         method: 'DELETE',
       });
 
@@ -147,7 +148,7 @@ function GeneralDiscussion() {
       const fetchThreads = async () => {
         try {
           console.log('Fetching threads from backend...');
-          const response = await fetch('http://localhost:5000/discussions/posts');
+          const response = await fetch('${API_BASE_URL}/discussions/posts');
           if (!response.ok) {
             throw new Error('Failed to fetch threads');
           }

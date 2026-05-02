@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../../styles/profile.css';
 import { getMovieDetails, Movie } from '../../../functions/api_service';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { API_BASE_URL } from '../../../config';
 
 function MovieHistory() {
     const [movies, setMovies] = useState<Movie[]>([]);
@@ -16,7 +17,7 @@ function MovieHistory() {
             if (user) {
                 try {
                     // Fetch user data from backend
-                    const response = await fetch(`http://localhost:5000/profile/data/${user.uid}`);
+                    const response = await fetch(`${API_BASE_URL}/profile/data/${user.uid}`);
                     if (!response.ok) {
                         throw new Error('Failed to fetch user data');
                     }

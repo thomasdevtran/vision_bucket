@@ -10,6 +10,8 @@ import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
 import otherReviews from '../data/other_reviews.json';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { API_BASE_URL } from '../config';
+import { useToast } from '../components/Toast';
 import green_circle from '../assets/circles/green_circle.png';
 import blue_circle from '../assets/circles/blue_circle.png';
 import yellow_circle from '../assets/circles/yellow_circle.png';
@@ -44,6 +46,7 @@ interface FirestoreReview {
 
 function MovieDetails() {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -87,7 +90,7 @@ function MovieDetails() {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
-          const response = await fetch(`http://localhost:5000/profile/data/${firebaseUser.uid}`);
+          const response = await fetch(`${API_BASE_URL}/profile/data/${firebaseUser.uid}`);
           if (!response.ok) throw new Error('Failed to fetch user data');
           const userData = await response.json();
           // Save all status lists
@@ -115,7 +118,7 @@ function MovieDetails() {
     const fetchReviews = async () => {
       if (!id) return;
       try {
-        const response = await fetch(`http://localhost:5000/reviews/${id}`);
+        const response = await fetch(`${API_BASE_URL}/reviews/${id}`);
         if (!response.ok) throw new Error('Failed to fetch reviews');
         const data = await response.json();
         setFirestoreReviews(data); // <-- data is now an array
@@ -129,11 +132,11 @@ function MovieDetails() {
   // Post a review
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
     if (!user) {
-      alert('You must be logged in to post a review!');
+      toast('You must be logged in to post a review.', 'error');
       return;
     }
     try {
-      const response = await fetch('http://localhost:5000/reviews/posting', {
+      const response = await fetch('${API_BASE_URL}/reviews/posting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -147,15 +150,15 @@ function MovieDetails() {
       if (!response.ok) throw new Error('Failed to post review');
       const data = await response.json();
       // Add reviewId to user's profile
-      await fetch(`http://localhost:5000/profile/update/${user.uid}/add_review`, {
+      await fetch(`${API_BASE_URL}/profile/update/${user.uid}/add_review`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewId: data.id }),
       });
       setFirestoreReviews((prev) => [...prev, { ...data.review, id: data.id }]);
-      alert('Review submitted successfully!');
+      toast('Review submitted!', 'success');
     } catch (err) {
-      alert('Failed to submit review.');
+      toast('Failed to submit review.', 'error');
       console.error(err);
     }
   };
@@ -163,25 +166,23 @@ function MovieDetails() {
   // Remove a review
   const handleDeleteReview = async (reviewId: string, reviewUid: string) => {
     if (!user || user.uid !== reviewUid) {
-      alert('You can only delete your own reviews.');
+      toast('You can only delete your own reviews.', 'error');
       return;
     }
     try {
-      // Delete review from Reviews collection
-      const response = await fetch(`http://localhost:5000/reviews/${reviewId}/${user.uid}`, {
+      const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}/${user.uid}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete review');
-      // Remove reviewId from user's profile
-      await fetch(`http://localhost:5000/profile/update/${user.uid}/remove_review`, {
+      await fetch(`${API_BASE_URL}/profile/update/${user.uid}/remove_review`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewId }),
       });
       setFirestoreReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      alert('Review deleted successfully!');
+      toast('Review deleted.', 'success');
     } catch (err) {
-      alert('Failed to delete review.');
+      toast('Failed to delete review.', 'error');
       console.error(err);
     }
   };
@@ -189,12 +190,12 @@ function MovieDetails() {
   // Add to movie_list in backend
   const handleAddToMovies = async () => {
     if (!user) {
-      alert('You must be logged in to add movies.');
+      toast('You must be logged in to add movies.', 'error');
       return;
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/add_movie_list`,
+        `${API_BASE_URL}/profile/update/${user.uid}/add_movie_list`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -203,9 +204,9 @@ function MovieDetails() {
       );
       if (!response.ok) throw new Error('Failed to add movie');
       setInMovieList(true);
-      alert('Movie added to your list!');
+      toast('Movie added to your list!', 'success');
     } catch (err) {
-      alert('Failed to add movie to your list.');
+      toast('Failed to add movie to your list.', 'error');
       console.error(err);
     }
   };
@@ -213,12 +214,12 @@ function MovieDetails() {
   // Remove from movie_list in backend
   const handleRemoveFromMovies = async () => {
     if (!user) {
-      alert('You must be logged in to remove movies.');
+      toast('You must be logged in to remove movies.', 'error');
       return;
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/remove_movie_list`,
+        `${API_BASE_URL}/profile/update/${user.uid}/remove_movie_list`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -227,16 +228,16 @@ function MovieDetails() {
       );
       if (!response.ok) throw new Error('Failed to remove movie');
       setInMovieList(false);
-      alert('Movie removed from your list!');
+      toast('Movie removed from your list.', 'success');
     } catch (err) {
-      alert('Failed to remove movie from your list.');
+      toast('Failed to remove movie from your list.', 'error');
       console.error(err);
     }
   };
 
   const fetchUserStatusLists = async (uid: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/profile/data/${uid}`);
+      const response = await fetch(`${API_BASE_URL}/profile/data/${uid}`);
       if (!response.ok) throw new Error('Failed to fetch user data');
       const userData = await response.json();
       setUserStatusLists({
@@ -268,7 +269,7 @@ function MovieDetails() {
       for (const status of Object.keys(userStatusLists)) {
         if (status !== newStatus && userStatusLists[status]?.includes(Number(id))) {
           await fetch(
-            `http://localhost:5000/profile/update/${user.uid}/${status}/remove_movie`,
+            `${API_BASE_URL}/profile/update/${user.uid}/${status}/remove_movie`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -279,7 +280,7 @@ function MovieDetails() {
       }
       // Add to new status list
       await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/${newStatus}/add_movie`,
+        `${API_BASE_URL}/profile/update/${user.uid}/${newStatus}/add_movie`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -288,9 +289,9 @@ function MovieDetails() {
       );
       // Refetch status lists to update UI
       await fetchUserStatusLists(user.uid);
-      alert(`Movie set to "${newStatus.replace(/_/g, ' ')}"!`);
+      toast(`Status set to "${newStatus.replace(/_/g, ' ')}"`, 'success');
     } catch (err) {
-      alert('Failed to update movie status.');
+      toast('Failed to update movie status.', 'error');
       console.error(err);
     }
     setStatusLoading(false);

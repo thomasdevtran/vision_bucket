@@ -5,6 +5,7 @@ import '../../styles/discussion.css';
 import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/discussion/Commentform';
 import { getAuth } from 'firebase/auth';
+import { API_BASE_URL } from '../../config';
 
 function ThreadDetails() {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +48,7 @@ function ThreadDetails() {
   useEffect(() => {
     const fetchThread = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/discussions/post/${id}`);
+        const response = await fetch(`${API_BASE_URL}/discussions/post/${id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch thread');
         }
@@ -84,7 +85,7 @@ function ThreadDetails() {
     const date = new Date().toISOString().split('T')[0];
 
     try {
-      const response = await fetch(`http://localhost:5000/discussions/post/${id}/comment`, {
+      const response = await fetch(`${API_BASE_URL}/discussions/post/${id}/comment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ function ThreadDetails() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/discussions/comment/${id}/${commentId}/${userUid}`,
+        `${API_BASE_URL}/discussions/comment/${id}/${commentId}/${userUid}`,
         {
           method: 'DELETE',
         }

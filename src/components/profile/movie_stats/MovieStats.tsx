@@ -6,6 +6,7 @@ import yellow_circle from '../../../assets/circles/yellow_circle.png';
 import red_circle from '../../../assets/circles/red_circle.png';
 import grey_circle from '../../../assets/circles/grey_circle.png';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { API_BASE_URL } from '../../../config';
 
 interface MovieStatsData {
     Watching?: number[];
@@ -26,7 +27,7 @@ function MovieStats() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    const response = await fetch(`http://localhost:5000/profile/data/${user.uid}`);
+                    const response = await fetch(`${API_BASE_URL}/profile/data/${user.uid}`);
                     if (!response.ok) throw new Error('Failed to fetch user data');
                     const userData = await response.json();
                     setStats(userData);

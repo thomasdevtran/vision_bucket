@@ -17,17 +17,19 @@ import SearchResult from './pages/search_result';
 import ThreadDetails from './pages/discussions/thread';
 import MovieDetails from './pages/MovieDetails';
 import ThreadNewsDetails from './pages/discussions/thread_news';
+import ReviewsList from './pages/reviews_list';
+import { AuthProvider } from './context/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastProvider } from './components/Toast';
 
-// Firebase configuration
-// Note: In a production environment, these values should be stored in environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBxY9tsBg6zberK1oOFG93a9QwZ1UWZOSo",
-  authDomain: "visionbucket-3517c.firebaseapp.com",
-  projectId: "visionbucket-3517c",
-  storageBucket: "visionbucket-3517c.firebasestorage.app",
-  messagingSenderId: "639317626851",
-  appId: "1:639317626851:web:d55a82d6459173c9ee5ad6",
-  measurementId: "G-DZLHPZML99"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 
@@ -41,21 +43,28 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/discussion" element={<Discussion />} />
-        <Route path="/discussion/general" element={<GeneralDiscussion />} />
-        <Route path="/discussion/news" element={<News />} />
-        <Route path="/discussion/rules" element={<Rules />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/search-result/:query" element={<SearchResult />} />
-        <Route path="/threads/:id" element={<ThreadDetails />} />
-        <Route path="/show/:id" element={<MovieDetails />} />
-        <Route path="/news-threads/:id" element={<ThreadNewsDetails />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/discussion" element={<Discussion />} />
+            <Route path="/discussion/general" element={<GeneralDiscussion />} />
+            <Route path="/discussion/news" element={<News />} />
+            <Route path="/discussion/rules" element={<Rules />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/search-result/:query" element={<SearchResult />} />
+            <Route path="/threads/:id" element={<ThreadDetails />} />
+            <Route path="/show/:id" element={<MovieDetails />} />
+            <Route path="/news-threads/:id" element={<ThreadNewsDetails />} />
+            <Route path="/reviews" element={<ReviewsList />} />
+          </Routes>
+        </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
 

@@ -7,11 +7,26 @@ import userIcon from '../../assets/userIcon.png';
 import searchIcon from '../../assets/searchIcon.png';
 import VisionBucket from '../../assets/VisionBucket.png';
 
+function useTheme() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  return { theme, toggleTheme };
+}
+
 function Header() {
   const [email, setEmail] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const auth = getAuth();
 
@@ -101,6 +116,15 @@ function Header() {
             </span>
           </button>
           
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+
           {showUserMenu && (
             <div className="user-menu">
               <button onClick={handleProfile} className="option-button">
@@ -108,6 +132,9 @@ function Header() {
               </button>
               <button onClick={handeldiscussion} className="option-button">
                 Discussion
+              </button>
+              <button onClick={() => navigate('/reviews')} className="option-button">
+                My Reviews
               </button>
               <button onClick={handleSignOut} className="sign-out-button">
                 Sign Out

@@ -1,46 +1,108 @@
-# Getting Started with Create React App
+# Vision Bucket
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack movie tracking and community platform for film enthusiasts. Track your watch history, write reviews, and discuss films with others.
 
-## Available Scripts
+> **Live demo:** _coming soon — deploy your backend to Render/Railway, then deploy the frontend to Vercel and add the URL here._
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Movie discovery** — Browse popular films and search the TMDB catalog
+- **Watch status tracking** — Tag movies as Watching, Completed, On-hold, Dropped, or Plan to Watch
+- **Reviews** — Write and rate movies (1–5 stars), view community reviews
+- **Discussion boards** — Create threads and comment in General and News sections
+- **User profiles** — Personal dashboard with watch history and review activity
+- **Dark / Light mode** — Theme toggle that persists across sessions
+- **Responsive design** — Works on desktop and mobile
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Tech Stack
 
-### `npm test`
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, React Router v6 |
+| Auth | Firebase Authentication (email/password) |
+| Movie data | TMDB API |
+| Backend | Node.js / Express (separate repo) |
+| Deployment | Vercel (frontend), Render/Railway (backend) |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js 18+
+- A [TMDB API key](https://www.themoviedb.org/settings/api)
+- A [Firebase project](https://console.firebase.google.com/) with Authentication enabled
+- The backend server running (see backend repo)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/<your-username>/vision-bucket.git
+cd vision-bucket
+npm install
+```
 
-### `npm run eject`
+### Environment variables
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Copy `.env.example` to `.env` and fill in your values:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cp .env.example .env
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```
+REACT_APP_API_URL=http://localhost:5000
+REACT_APP_TMDB_API_KEY=your_key
+REACT_APP_TMDB_ACCESS_TOKEN=your_token
+REACT_APP_FIREBASE_API_KEY=...
+REACT_APP_FIREBASE_AUTH_DOMAIN=...
+REACT_APP_FIREBASE_PROJECT_ID=...
+REACT_APP_FIREBASE_STORAGE_BUCKET=...
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
+REACT_APP_FIREBASE_APP_ID=...
+REACT_APP_FIREBASE_MEASUREMENT_ID=...
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Run locally
 
-## Learn More
+```bash
+npm start        # starts on http://localhost:3000
+npm test         # run tests
+npm run build    # production build
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Deployment
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Frontend (Vercel)
+
+1. Push your repo to GitHub
+2. Import the project at [vercel.com](https://vercel.com)
+3. Add all `REACT_APP_*` environment variables in Vercel project settings
+4. Set `REACT_APP_API_URL` to your deployed backend URL
+5. Deploy — Vercel auto-deploys on every push to `main`
+
+### Backend (Render / Railway)
+
+Deploy the backend repo separately and copy the live URL into `REACT_APP_API_URL` in your Vercel settings.
+
+## Project Structure
+
+```
+src/
+├── components/        # Reusable UI components
+│   ├── header/        # Nav + search bar + theme toggle
+│   ├── movie_details/ # Review form, review card, poster
+│   ├── profile/       # Stats, history, review display
+│   ├── discussion/    # Thread previews, comment form
+│   ├── ErrorBoundary  # Global error boundary
+│   └── Toast          # Toast notification system
+├── context/
+│   └── AuthContext    # Global Firebase auth state
+├── functions/
+│   └── api_service    # TMDB API helpers
+├── pages/             # Route-level page components
+├── styles/            # CSS stylesheets + themes.css
+├── types/             # Shared TypeScript interfaces
+└── config.ts          # Environment variable config
+```
