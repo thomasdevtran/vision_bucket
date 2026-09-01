@@ -9,28 +9,29 @@ import MoviePoster from '../components/movie_details/MoviePoster';
 import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import green_circle from '../assets/circles/green_circle.png';
 import blue_circle from '../assets/circles/blue_circle.png';
 import yellow_circle from '../assets/circles/yellow_circle.png';
 import red_circle from '../assets/circles/red_circle.png';
 import grey_circle from '../assets/circles/grey_circle.png';
 import {
-  addMovieToUserList,
   createReview,
   deleteReviewForUser,
+  getErrorMessage,
   getReviewsForMovie,
-  getUserProfile,
-  removeMovieFromUserList,
-  setMovieStatus,
+  getWatchEntries,
+  removeWatchEntry,
+  saveWatchEntry,
+  updateReview,
+  WatchStatus,
 } from '../functions/firebase_backend';
 
 const STATUS_OPTIONS = [
-  { value: 'Watching', label: 'Watching', icon: green_circle },
+  { value: 'Plan_to_watch', label: 'Plan to Watch', icon: grey_circle },
   { value: 'Completed', label: 'Completed', icon: blue_circle },
+  { value: 'Rewatched', label: 'Rewatched', icon: blue_circle },
   { value: 'On_hold', label: 'On-hold', icon: yellow_circle },
   { value: 'Dropped', label: 'Dropped', icon: red_circle },
-  { value: 'Plan_to_watch', label: 'Plan to Watch', icon: grey_circle },
-];
+] as const;
 
 interface FirestoreReview {
   id: string;
@@ -38,7 +39,7 @@ interface FirestoreReview {
   Author: string;
   content: string;
   rating: number;
-  uid: string;
+  uid?: string;
   date: string;
 }
 
@@ -47,9 +48,19 @@ function MovieDetails() {
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [inMovieList, setInMovieList] = useState<boolean>(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<WatchStatus>('Plan_to_watch');
+  const [hasWatchEntry, setHasWatchEntry] = useState(false);
+  const [watchedAt, setWatchedAt] = useState('');
+  const [personalRating, setPersonalRating] = useState('');
+  const [progress, setProgress] = useState('');
+  const [notes, setNotes] = useState('');
+  const [trackingBusy, setTrackingBusy] = useState(false);
+  const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [firestoreReviews, setFirestoreReviews] = useState<FirestoreReview[]>([]);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editingReviewText, setEditingReviewText] = useState('');
+  const [editingReviewRating, setEditingReviewRating] = useState(1);
+  const [reviewActionError, setReviewActionError] = useState('');
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -71,14 +82,23 @@ function MovieDetails() {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
-          const userData = await getUserProfile(firebaseUser.uid);
-          const foundStatus = Object.entries(userData)
-            .find(([status, arr]) => Array.isArray(arr) && arr.includes(Number(id)));
-          if (foundStatus) setSelectedStatus(foundStatus[0]);
-          setInMovieList((userData.movie_list || []).includes(Number(id)));
+          const entries = await getWatchEntries(firebaseUser.uid);
+          const entry = entries.find((item) => String(item.movieId) === String(id));
+          if (entry) {
+            setSelectedStatus(entry.status);
+            setWatchedAt(entry.watchedAt?.slice(0, 10) || '');
+            setPersonalRating(entry.rating === undefined ? '' : String(entry.rating));
+            setProgress(entry.progress === undefined ? '' : String(entry.progress));
+            setNotes(entry.notes || '');
+            setHasWatchEntry(true);
+          } else {
+            setHasWatchEntry(false);
+          }
         } catch (err) {
-          console.error('Failed to fetch user movie lists:', err);
+          setTrackingMessage(getErrorMessage(err, 'Unable to load your tracking details.'));
         }
+      } else {
+        setHasWatchEntry(false);
       }
     });
     return () => unsubscribe();
@@ -115,13 +135,13 @@ function MovieDetails() {
       setFirestoreReviews((prev) => [data, ...prev]);
       alert('Review submitted successfully!');
     } catch (err) {
-      alert('Failed to submit review.');
       console.error(err);
+      throw new Error(getErrorMessage(err, 'Failed to submit review.'));
     }
   };
 
   // Remove a review
-  const handleDeleteReview = async (reviewId: string, reviewUid: string) => {
+  const handleDeleteReview = async (reviewId: string, reviewUid?: string) => {
     if (!user || user.uid !== reviewUid) {
       alert('You can only delete your own reviews.');
       return;
@@ -136,63 +156,81 @@ function MovieDetails() {
     }
   };
 
-  // Add to movie_list in backend
-  const handleAddToMovies = async () => {
-    if (!user) {
-      alert('You must be logged in to add movies.');
-      return;
-    }
+  const startEditingReview = (review: FirestoreReview) => {
+    setEditingReviewId(review.id);
+    setEditingReviewText(review.content);
+    setEditingReviewRating(review.rating);
+    setReviewActionError('');
+  };
+
+  const handleUpdateReview = async () => {
+    if (!editingReviewId || !editingReviewText.trim()) return;
     try {
-      await addMovieToUserList(user.uid, Number(id));
-      setInMovieList(true);
-      alert('Movie added to your list!');
-    } catch (err) {
-      alert('Failed to add movie to your list.');
-      console.error(err);
+      await updateReview(editingReviewId, {
+        content: editingReviewText.trim(),
+        rating: editingReviewRating,
+      });
+      setFirestoreReviews((reviews) => reviews.map((review) => review.id === editingReviewId
+        ? { ...review, content: editingReviewText.trim(), rating: editingReviewRating }
+        : review));
+      setEditingReviewId(null);
+      setReviewActionError('');
+    } catch (updateError) {
+      setReviewActionError(getErrorMessage(updateError, 'Unable to update your review.'));
     }
   };
 
-  // Remove from movie_list in backend
-  const handleRemoveFromMovies = async () => {
+  const handleSaveTracking = async () => {
     if (!user) {
-      alert('You must be logged in to remove movies.');
+      setTrackingMessage('Sign in to track this movie.');
       return;
     }
+    const rating = personalRating === '' ? undefined : Number(personalRating);
+    const progressValue = progress === '' ? undefined : Number(progress);
+    if (rating !== undefined && (rating < 1 || rating > 5)) {
+      setTrackingMessage('Your rating must be between 1 and 5.');
+      return;
+    }
+    if (progressValue !== undefined && (progressValue < 0 || progressValue > 100)) {
+      setTrackingMessage('Progress must be between 0 and 100.');
+      return;
+    }
+
+    setTrackingBusy(true);
+    setTrackingMessage(null);
     try {
-      await removeMovieFromUserList(user.uid, Number(id));
-      setInMovieList(false);
-      alert('Movie removed from your list!');
+      await saveWatchEntry(user.uid, Number(id), {
+        status: selectedStatus,
+        ...(watchedAt ? { watchedAt: new Date(`${watchedAt}T00:00:00`).toISOString() } : {}),
+        ...(rating !== undefined ? { rating } : {}),
+        ...(progressValue !== undefined ? { progress: progressValue } : {}),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
+      });
+      setHasWatchEntry(true);
+      setTrackingMessage('Tracking details saved.');
     } catch (err) {
-      alert('Failed to remove movie from your list.');
-      console.error(err);
+      setTrackingMessage(getErrorMessage(err, 'Unable to save tracking details.'));
+    } finally {
+      setTrackingBusy(false);
     }
   };
 
-  const fetchUserStatusLists = async (uid: string) => {
+  const handleRemoveTracking = async () => {
+    if (!user || !hasWatchEntry) return;
+    setTrackingBusy(true);
+    setTrackingMessage(null);
     try {
-      const userData = await getUserProfile(uid);
-      const foundStatus = Object.entries(userData)
-        .find(([status, arr]) => Array.isArray(arr) && arr.includes(Number(id)));
-      if (foundStatus) setSelectedStatus(foundStatus[0]);
-      else setSelectedStatus('');
+      await removeWatchEntry(user.uid, Number(id), selectedStatus);
+      setHasWatchEntry(false);
+      setWatchedAt('');
+      setPersonalRating('');
+      setProgress('');
+      setNotes('');
+      setTrackingMessage('Movie removed from your library.');
     } catch (err) {
-      console.error('Failed to fetch user movie lists:', err);
-    }
-  };
-
-  // Set status for this movie
-  const handleSetStatus = async (newStatus: string) => {
-    if (!user) {
-      alert('You must be logged in to update movie status.');
-      return;
-    }
-    try {
-      await setMovieStatus(user.uid, Number(id), newStatus);
-      await fetchUserStatusLists(user.uid);
-      alert(`Movie set to "${newStatus.replace(/_/g, ' ')}"!`);
-    } catch (err) {
-      alert('Failed to update movie status.');
-      console.error(err);
+      setTrackingMessage(getErrorMessage(err, 'Unable to remove this movie.'));
+    } finally {
+      setTrackingBusy(false);
     }
   };
 
@@ -239,7 +277,7 @@ function MovieDetails() {
                       name="movie-status"
                       value={option.value}
                       checked={selectedStatus === option.value}
-                      onChange={() => handleSetStatus(option.value)}
+                      onChange={() => setSelectedStatus(option.value)}
                     />
                     <img src={option.icon} alt={option.label} className="status-icon" />
                     <span>{option.label}</span>
@@ -247,17 +285,61 @@ function MovieDetails() {
                 ))}
               </div>
 
+              <div className="tracking-fields">
+                <label>
+                  Watched date
+                  <input type="date" value={watchedAt} onChange={(event) => setWatchedAt(event.target.value)} />
+                </label>
+                <label>
+                  Your rating
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="1"
+                    placeholder="1–5"
+                    value={personalRating}
+                    onChange={(event) => setPersonalRating(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Progress
+                  <div className="progress-input">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      placeholder="0"
+                      value={progress}
+                      onChange={(event) => setProgress(event.target.value)}
+                    />
+                    <span>%</span>
+                  </div>
+                </label>
+                <label className="tracking-notes">
+                  Private notes
+                  <textarea
+                    rows={3}
+                    maxLength={1000}
+                    placeholder="Anything you want to remember about this watch…"
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                  />
+                </label>
+              </div>
+
               <div className="movie-list-actions">
-                {inMovieList ? (
-                  <button onClick={handleRemoveFromMovies} className="movie-list-button remove">
-                    Remove from Movie List
-                  </button>
-                ) : (
-                  <button onClick={handleAddToMovies} className="movie-list-button add">
-                    Add to Movie List
+                <button onClick={handleSaveTracking} className="movie-list-button add" disabled={trackingBusy}>
+                  {trackingBusy ? 'Saving…' : hasWatchEntry ? 'Update tracking' : 'Save to library'}
+                </button>
+                {hasWatchEntry && (
+                  <button onClick={handleRemoveTracking} className="movie-list-button remove" disabled={trackingBusy}>
+                    Remove
                   </button>
                 )}
               </div>
+              {trackingMessage && <p className="tracking-message" role="status">{trackingMessage}</p>}
             </div>
           </article>
 
@@ -285,19 +367,42 @@ function MovieDetails() {
               {firestoreReviews.length > 0 ? (
                 firestoreReviews.map((review, index) => (
                   <div key={review.id} className="review-item">
-                    <ReviewCard
-                      review={review.content}
-                      author={review.Author}
-                      rating={review.rating}
-                      index={index}
-                    />
-                    {user && user.uid === review.uid && (
-                      <button
-                        onClick={() => handleDeleteReview(review.id, review.uid)}
-                        className="review-delete-button"
-                      >
-                        Delete
-                      </button>
+                    {editingReviewId === review.id ? (
+                      <div className="review-edit-form">
+                        <textarea
+                          rows={4}
+                          value={editingReviewText}
+                          onChange={(event) => setEditingReviewText(event.target.value)}
+                        />
+                        <select
+                          value={editingReviewRating}
+                          onChange={(event) => setEditingReviewRating(Number(event.target.value))}
+                        >
+                          {[1, 2, 3, 4, 5].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
+                        </select>
+                        <div className="review-edit-actions">
+                          <button className="review-form-submit" onClick={handleUpdateReview}>Save changes</button>
+                          <button className="review-action" onClick={() => setEditingReviewId(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <ReviewCard
+                        review={review.content}
+                        author={review.Author}
+                        rating={review.rating}
+                        index={index}
+                      />
+                    )}
+                    {user && user.uid === review.uid && editingReviewId !== review.id && (
+                      <div className="review-owner-actions">
+                        <button onClick={() => startEditingReview(review)} className="review-action">Edit</button>
+                        <button
+                          onClick={() => handleDeleteReview(review.id, review.uid)}
+                          className="review-delete-button"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))
@@ -308,6 +413,7 @@ function MovieDetails() {
                 </div>
               )}
             </div>
+            {reviewActionError && <p className="review-form-error" role="alert">{reviewActionError}</p>}
           </section>
         </section>
 

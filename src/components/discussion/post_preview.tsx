@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface Thread {
   id: string;
-  uid: string;
+  uid?: string;
   title: string;
   description: string;
   date: string;
@@ -43,7 +43,7 @@ const DiscussionPreviews: React.FC<DiscussionPreviewsProps> = ({ threads, onDele
           {currentUid === thread.uid && (
             <button
               className="discussion-delete-button"
-              onClick={() => onDeleteThread(thread.id, thread.uid)}
+              onClick={() => onDeleteThread(thread.id, thread.uid!)}
             >
               Delete Thread
             </button>

@@ -5,11 +5,11 @@ import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
 import DiscussionPreviews from '../../components/discussion/post_preview';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { createThread, deleteThread, getThreads } from '../../functions/firebase_backend';
+import { createThread, deleteThread, getErrorMessage, getThreads } from '../../functions/firebase_backend';
 
 interface Thread {
   id: string;
-  uid: string;
+  uid?: string;
   title: string;
   description: string;
   date: string;
@@ -22,6 +22,8 @@ function GeneralDiscussion() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchThreads = async () => {
@@ -69,8 +71,10 @@ function GeneralDiscussion() {
       return;
     }
 
+    setSubmitting(true);
+    setFormError('');
     try {
-      await createThread('Discussions', {
+      const created = await createThread('Discussions', {
         Author: username || 'Anonymous',
         uid: userId,
         Date: new Date().toISOString().split('T')[0],
@@ -79,32 +83,21 @@ function GeneralDiscussion() {
         Description: description,
       });
 
-      const fetchThreads = async () => {
-        try {
-          const data = await getThreads('Discussions');
-
-          const mappedThreads = data.map((thread: any) => ({
-            id: thread.id,
-            uid: thread.uid,
-            author: thread.Author,
-            date: thread.Date,
-            title: thread.Title,
-            description: thread.Description
-            
-          }));
-
-          setThreads(mappedThreads);
-        } catch (error) {
-          console.error('Error fetching threads:', error);
-        }
-      };
-
-      fetchThreads();
+      setThreads((current) => [{
+        id: created.id,
+        uid: userId,
+        author: created.Author,
+        date: created.Date,
+        title: created.Title,
+        description: created.Description,
+      }, ...current]);
 
       setTitle('');
       setDescription('');
     } catch (error) {
-      console.error('Error creating thread:', error);
+      setFormError(getErrorMessage(error, 'Unable to create this thread.'));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -134,7 +127,7 @@ function GeneralDiscussion() {
 
       fetchThreads();
     } catch (error) {
-      console.error('Error deleting thread:', error);
+      setFormError(getErrorMessage(error, 'Unable to delete this thread.'));
     }
   };
 
@@ -180,7 +173,10 @@ function GeneralDiscussion() {
                 rows={4}
               />
             </div>
-            <button className="create-thread-btn">CREATE THREAD</button>
+            <button className="create-thread-btn" disabled={submitting}>
+              {submitting ? 'CREATING…' : 'CREATE THREAD'}
+            </button>
+            {formError && <p className="discussion-form-error" role="alert">{formError}</p>}
           </form>
         </main>
         <DiscussionPreviews threads={threads} onDeleteThread={handleDeleteThread} currentUid={userId} /> {/* Pass fetched threads */}

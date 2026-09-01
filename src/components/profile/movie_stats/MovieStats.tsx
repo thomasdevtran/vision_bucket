@@ -1,25 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import '../../../styles/profile.css';
-import green_circle from '../../../assets/circles/green_circle.png';
 import blue_circle from '../../../assets/circles/blue_circle.png';
 import yellow_circle from '../../../assets/circles/yellow_circle.png';
 import red_circle from '../../../assets/circles/red_circle.png';
 import grey_circle from '../../../assets/circles/grey_circle.png';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getUserProfile } from '../../../functions/firebase_backend';
-
-interface MovieStatsData {
-    Watching?: number[];
-    Completed?: number[];
-    On_hold?: number[];
-    Dropped?: number[];
-    Plan_to_watch?: number[];
-    Rewatched?: number[];
-    movie_list?: number[];
-}
+import { getWatchEntries, WatchEntry } from '../../../functions/firebase_backend';
 
 function MovieStats() {
-    const [stats, setStats] = useState<MovieStatsData>({});
+    const [entries, setEntries] = useState<WatchEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -27,15 +16,14 @@ function MovieStats() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    const userData = await getUserProfile(user.uid);
-                    setStats(userData);
+                    setEntries(await getWatchEntries(user.uid));
                 } catch (err) {
-                    setStats({});
+                    setEntries([]);
                 } finally {
                     setLoading(false);
                 }
             } else {
-                setStats({});
+                setEntries([]);
                 setLoading(false);
             }
         });
@@ -46,26 +34,24 @@ function MovieStats() {
         return <div>Loading...</div>;
     }
 
+    const count = (status: WatchEntry['status']) => entries.filter((entry) => entry.status === status).length;
+
     return (
         <div className="stats-card">
             <h2>Movie Stats</h2>
             <p>
-                <img src={green_circle} alt="Green Circle" className="circle-picture" />Watching: {stats.Watching?.length || 0}
+                <img src={blue_circle} alt="Blue Circle" className="circle-picture" />Completed: {count('Completed')}
                 <br />
-                <img src={blue_circle} alt="Blue Circle" className="circle-picture" />Completed: {stats.Completed?.length || 0}
+                <img src={yellow_circle} alt="Yellow Circle" className="circle-picture" />On-hold: {count('On_hold')}
                 <br />
-                <img src={yellow_circle} alt="Yellow Circle" className="circle-picture" />On-hold: {stats.On_hold?.length || 0}
+                <img src={red_circle} alt="Red Circle" className="circle-picture" />Dropped: {count('Dropped')}
                 <br />
-                <img src={red_circle} alt="Red Circle" className="circle-picture" />Dropped: {stats.Dropped?.length || 0}
-                <br />
-                <img src={grey_circle} alt="Grey Circle" className="circle-picture" />Plan to Watch: {stats.Plan_to_watch?.length || 0}
+                <img src={grey_circle} alt="Grey Circle" className="circle-picture" />Plan to Watch: {count('Plan_to_watch')}
                 <br />
                 <br />
-                Watched: {stats.movie_list?.length || 0}
+                Tracked: {entries.length}
                 <br />
-                Rewatched: {stats.Rewatched?.length || 0}
-                <br />
-                {/* Total Episodes: Not available in backend, add if you have this data */}
+                Rewatched: {count('Rewatched')}
             </p>
             {/* insert the pie chart somewhere */}
         </div>

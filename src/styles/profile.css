@@ -313,3 +313,8 @@
         transition: none !important;
     }
 }
+
+.history-empty {
+    margin: 8px;
+    color: var(--text-secondary);
+}

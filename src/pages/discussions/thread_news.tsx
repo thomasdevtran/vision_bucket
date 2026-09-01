@@ -5,7 +5,7 @@ import '../../styles/discussion.css';
 import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/discussion/Commentform';
 import { getAuth } from 'firebase/auth';
-import { addCommentToThread, deleteCommentFromThread, getThreadById } from '../../functions/firebase_backend';
+import { addCommentToThread, getErrorMessage, getThreadById } from '../../functions/firebase_backend';
 
 function ThreadNewsDetails() {
   const { id } = useParams<{ id: string }>();
@@ -15,12 +15,12 @@ function ThreadNewsDetails() {
     content: string;
     author: string;
     date: string;
-    uid: string; // Add uid to the Comment interface
+    uid?: string;
   }
 
   interface Thread {
     id: string;
-    uid: string;
+    uid?: string;
     title: string;
     description: string;
     author: string;
@@ -31,6 +31,7 @@ function ThreadNewsDetails() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [userUid, setUserUid] = useState<string | null>(null); // Track the current user's UID
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     const auth = getAuth();
@@ -75,7 +76,8 @@ function ThreadNewsDetails() {
   const handleAddComment = async (commentText: string) => {
     if (!thread || !userUid) return; // Ensure there's a thread and a user is logged in
 
-    const author = localStorage.getItem('username') || "Anonymous";
+    const currentUser = getAuth().currentUser;
+    const author = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Anonymous';
     const date = new Date().toISOString().split('T')[0];
 
     try {
@@ -86,21 +88,11 @@ function ThreadNewsDetails() {
         date,
         uid: userUid,
       };
-      await addCommentToThread('News', id || '', newComment);
-      setComments(prevComments => [...prevComments, newComment]);
+      const savedComment = await addCommentToThread('News', id || '', newComment);
+      setComments(prevComments => [...prevComments, savedComment]);
+      setActionError('');
     } catch (error) {
-      console.error('Error adding comment:', error);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    if (!thread || !userUid) return;
-
-    try {
-      await deleteCommentFromThread('News', id || '', commentId, userUid);
-      setComments(prevComments => prevComments.filter(comment => comment.commentId !== commentId));
-    } catch (error) {
-      console.error('Error deleting comment:', error);
+      setActionError(getErrorMessage(error, 'Unable to add your comment.'));
     }
   };
 
@@ -140,21 +132,13 @@ function ThreadNewsDetails() {
                   <strong>{comment.author}:</strong> {comment.content}
                 </p>
                 <span className="comment-date">{comment.date}</span>
-                {/* Conditionally render the delete button */}
-                {userUid === comment.uid && (
-                  <button
-                    className="comment-delete-button"
-                    onClick={() => handleDeleteComment(comment.commentId)}
-                  >
-                    Delete
-                  </button>
-                )}
               </div>
             ))
           ) : (
             <p className="no-comments">No comments yet.</p>
           )}
           <CommentForm onSubmit={handleAddComment} />
+          {actionError && <p className="discussion-form-error" role="alert">{actionError}</p>}
         </div>
       </div>
       <Footer />

@@ -5,7 +5,7 @@ import '../../styles/discussion.css';
 import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/discussion/Commentform';
 import { getAuth } from 'firebase/auth';
-import { addCommentToThread, deleteCommentFromThread, getThreadById } from '../../functions/firebase_backend';
+import { addCommentToThread, deleteCommentFromThread, getErrorMessage, getThreadById } from '../../functions/firebase_backend';
 
 function ThreadDetails() {
   const { id } = useParams<{ id: string }>();
@@ -15,12 +15,12 @@ function ThreadDetails() {
     content: string;
     author: string;
     date: string;
-    uid: string;
+    uid?: string;
   }
 
   interface Thread {
     id: string;
-    uid: string;
+    uid?: string;
     title: string;
     description: string;
     author: string;
@@ -31,6 +31,7 @@ function ThreadDetails() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [userUid, setUserUid] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     const auth = getAuth();
@@ -75,7 +76,8 @@ function ThreadDetails() {
   const handleAddComment = async (commentText: string) => {
     if (!thread || !userUid) return;
 
-    const author = localStorage.getItem('username') || "Anonymous";
+    const currentUser = getAuth().currentUser;
+    const author = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Anonymous';
     const date = new Date().toISOString().split('T')[0];
 
     try {
@@ -86,10 +88,11 @@ function ThreadDetails() {
         content: commentText,
         date,
       };
-      await addCommentToThread('Discussions', id || '', newComment);
-      setComments(prevComments => [...prevComments, newComment]);
+      const savedComment = await addCommentToThread('Discussions', id || '', newComment);
+      setComments(prevComments => [...prevComments, savedComment]);
+      setActionError('');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      setActionError(getErrorMessage(error, 'Unable to add your comment.'));
     }
   };
 
@@ -100,7 +103,7 @@ function ThreadDetails() {
       await deleteCommentFromThread('Discussions', id || '', commentId, userUid);
       setComments(prevComments => prevComments.filter(comment => comment.commentId !== commentId));
     } catch (error) {
-      console.error('Error deleting comment:', error);
+      setActionError(getErrorMessage(error, 'Unable to delete this comment.'));
     }
   };
 
@@ -154,6 +157,7 @@ function ThreadDetails() {
             <p className="no-comments">No comments yet.</p>
           )}
           <CommentForm onSubmit={handleAddComment} />
+          {actionError && <p className="discussion-form-error" role="alert">{actionError}</p>}
         </div>
       </div>
       <Footer />
