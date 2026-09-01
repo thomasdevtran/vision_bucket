@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { searchMovies, Movie } from '../functions/api_service';
+import { searchMovies, getApiErrorMessage, Movie } from '../functions/api_service';
 import '../App.css';
 import Header from '../components/header/header';
 import Footer from '../components/footer/footer';
@@ -37,7 +37,7 @@ function SearchResults() {
           const response = await searchMovies(query);
           setMovies(response.results);
         } catch (err) {
-          setError('Failed to fetch movies');
+          setError(getApiErrorMessage(err, 'Failed to fetch movies'));
           console.error(err);
         }
       };

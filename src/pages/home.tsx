@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getMoviesByGenre, Movie } from '../functions/api_service';
+import { getMoviesByGenre, getApiErrorMessage, Movie } from '../functions/api_service';
 import '../App.css';
 import Header from '../components/header/header';
 import Footer from '../components/footer/footer';
@@ -57,7 +57,7 @@ function Home() {
         const comedyResponse = await getMoviesByGenre(COMEDY_GENRE_ID);
         setComedyMovies(comedyResponse.results);
       } catch (err) {
-        setError('Failed to fetch movies');
+        setError(getApiErrorMessage(err, 'Failed to fetch movies'));
         console.error(err);
       }
     };
