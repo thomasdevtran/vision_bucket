@@ -280,6 +280,66 @@ export const updateReview = async (reviewId: string, update: { content: string; 
   }, true);
 };
 
+export interface FollowCounts {
+  uid: string;
+  followers: number;
+  following: number;
+}
+
+export interface FeedItem {
+  id: string;
+  type: 'review' | 'watch';
+  actorUid: string;
+  actorName: string | null;
+  timestamp: string | null;
+  movieId: number | string;
+  content?: string;
+  rating?: number;
+  status?: string;
+  refId: string;
+}
+
+export interface FeedPage {
+  items: FeedItem[];
+  nextCursor: string | null;
+}
+
+export const followUser = (followeeId: string) =>
+  request<{ message: string }>('/follows', {
+    method: 'POST',
+    body: JSON.stringify({ followeeId }),
+  }, true);
+
+export const unfollowUser = (followeeId: string) =>
+  request<{ message: string }>(`/follows/${encodeURIComponent(followeeId)}`, {
+    method: 'DELETE',
+  }, true);
+
+export const getFollowCounts = async (uid: string): Promise<FollowCounts> => {
+  const [followers, following] = await Promise.all([
+    request<{ count: number }>(`/follows/followers/${encodeURIComponent(uid)}`),
+    request<{ count: number }>(`/follows/following/${encodeURIComponent(uid)}`),
+  ]);
+  return { uid, followers: followers.count, following: following.count };
+};
+
+export const getFollowStatus = async (uid: string): Promise<boolean> => {
+  const result = await request<{ following: boolean }>(
+    `/follows/status/${encodeURIComponent(uid)}`,
+    {},
+    true
+  );
+  return result.following;
+};
+
+export const getFeed = (options: { cursor?: string | null; limit?: number } = {}) => {
+  const params = new URLSearchParams();
+  if (options.cursor) params.set('cursor', options.cursor);
+  if (options.limit) params.set('limit', String(options.limit));
+  const queryString = params.toString();
+  return request<FeedPage>(`/feed${queryString ? `?${queryString}` : ''}`, {}, true);
+};
+
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 
 export const getThreads = async (name: 'Discussions' | 'News') => {

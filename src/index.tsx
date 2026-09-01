@@ -15,6 +15,7 @@ import ThreadDetails from './pages/discussions/thread';
 import MovieDetails from './pages/MovieDetails';
 import ThreadNewsDetails from './pages/discussions/thread_news';
 import ReviewsList from './pages/reviews_list';
+import Feed from './pages/feed';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -34,6 +35,8 @@ root.render(
             <Route path="/discussion/general" element={<GeneralDiscussion />} />
             <Route path="/discussion/news" element={<News />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:uid" element={<Profile />} />
+            <Route path="/feed" element={<Feed />} />
             <Route path="/reviews" element={<ReviewsList />} />
             <Route path="/search-result/:query" element={<SearchResult />} />
             <Route path="/threads/:id" element={<ThreadDetails />} />
