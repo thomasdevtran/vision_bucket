@@ -340,6 +340,86 @@ export const getFeed = (options: { cursor?: string | null; limit?: number } = {}
   return request<FeedPage>(`/feed${queryString ? `?${queryString}` : ''}`, {}, true);
 };
 
+export interface MovieListItem {
+  movieId: number;
+  position: number;
+  note?: string;
+}
+
+export interface MovieList {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  isPublic: boolean;
+  collaboratorIds: string[];
+  items: MovieListItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MovieListInput {
+  title: string;
+  description?: string;
+  isPublic?: boolean;
+}
+
+export interface MovieListUpdate {
+  title?: string;
+  description?: string;
+  isPublic?: boolean;
+}
+
+// Send the caller's token when signed in so owners/collaborators can see their
+// private lists, but still allow anonymous reads of public lists.
+const authedWhenSignedIn = () => !!auth.currentUser;
+
+export const createList = (input: MovieListInput) =>
+  request<MovieList>('/lists', { method: 'POST', body: JSON.stringify(input) }, true);
+
+export const getList = (id: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}`, {}, authedWhenSignedIn());
+
+export const getUserLists = (uid: string) =>
+  request<MovieList[]>(`/lists/user/${encodeURIComponent(uid)}`, {}, authedWhenSignedIn());
+
+export const updateList = (id: string, update: MovieListUpdate) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  }, true);
+
+export const deleteList = (id: string) =>
+  request<{ message: string }>(`/lists/${encodeURIComponent(id)}`, { method: 'DELETE' }, true);
+
+export const addListItem = (id: string, movieId: number, note?: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { movieId, note } : { movieId }),
+  }, true);
+
+export const reorderListItems = (id: string, order: number[]) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items`, {
+    method: 'PATCH',
+    body: JSON.stringify({ order }),
+  }, true);
+
+export const removeListItem = (id: string, movieId: number) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items/${encodeURIComponent(String(movieId))}`, {
+    method: 'DELETE',
+  }, true);
+
+export const addCollaborator = (id: string, uid: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/collaborators`, {
+    method: 'POST',
+    body: JSON.stringify({ uid }),
+  }, true);
+
+export const removeCollaborator = (id: string, uid: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/collaborators/${encodeURIComponent(uid)}`, {
+    method: 'DELETE',
+  }, true);
+
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 
 export const getThreads = async (name: 'Discussions' | 'News') => {

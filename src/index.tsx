@@ -13,6 +13,7 @@ import Profile from './pages/profile';
 import SearchResult from './pages/search_result';
 import ThreadDetails from './pages/discussions/thread';
 import MovieDetails from './pages/MovieDetails';
+import ListDetail from './pages/ListDetail';
 import ThreadNewsDetails from './pages/discussions/thread_news';
 import ReviewsList from './pages/reviews_list';
 import Feed from './pages/feed';
@@ -41,6 +42,7 @@ root.render(
             <Route path="/search-result/:query" element={<SearchResult />} />
             <Route path="/threads/:id" element={<ThreadDetails />} />
             <Route path="/show/:id" element={<MovieDetails />} />
+            <Route path="/lists/:id" element={<ListDetail />} />
             <Route path="/news-threads/:id" element={<ThreadNewsDetails />} />
           </Routes>
         </BrowserRouter>
