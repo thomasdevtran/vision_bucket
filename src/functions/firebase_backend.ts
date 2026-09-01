@@ -148,6 +148,52 @@ export interface AppThread {
   Comments: AppComment[];
 }
 
+export type ReportTargetType = 'review' | 'thread' | 'comment';
+export type ReportStatus = 'open' | 'resolved' | 'dismissed';
+
+export interface Report {
+  id: string;
+  reporterUid: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  status: ReportStatus;
+  createdAt: string;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  resolution: string | null;
+}
+
+export interface ResolveReportInput {
+  status: 'resolved' | 'dismissed';
+  removeTarget?: boolean;
+}
+
+// Report a piece of content (auth). The reporter is always the token uid; the
+// server rejects a second open report on the same target with a 409.
+export const reportContent = (targetType: ReportTargetType, targetId: string, reason: string) =>
+  request<Report>('/reports', {
+    method: 'POST',
+    body: JSON.stringify({ targetType, targetId, reason }),
+  }, true);
+
+// Moderator/admin only: list reports for a status (defaults to open, newest-first).
+export const getReports = (status: ReportStatus = 'open') =>
+  request<{ status: ReportStatus; reports: Report[] }>(
+    `/reports?status=${encodeURIComponent(status)}`,
+    {},
+    true
+  );
+
+// Moderator/admin only: resolve or dismiss a report, optionally removing the
+// offending content. Returns the updated report plus whether it was removed.
+export const resolveReport = (id: string, input: ResolveReportInput) =>
+  request<Report & { removedTarget: boolean }>(
+    `/reports/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    true
+  );
+
 const DEFAULT_PROFILE = (username: string, timestamp: string): UserProfile => ({
   Username: username,
   username,
