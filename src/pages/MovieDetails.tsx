@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getMovieDetails, Movie } from '../functions/api_service';
 import '../styles/MovieDetails.css';
 import Header from '../components/header/header';
@@ -19,11 +19,14 @@ import {
   getErrorMessage,
   getReviewsForMovie,
   getWatchEntries,
+  logDiaryEntry,
   removeWatchEntry,
   saveWatchEntry,
   updateReview,
   WatchStatus,
 } from '../functions/firebase_backend';
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 const STATUS_OPTIONS = [
   { value: 'Plan_to_watch', label: 'Plan to Watch', icon: grey_circle },
@@ -56,6 +59,12 @@ function MovieDetails() {
   const [notes, setNotes] = useState('');
   const [trackingBusy, setTrackingBusy] = useState(false);
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
+  const [diaryDate, setDiaryDate] = useState(today());
+  const [diaryRating, setDiaryRating] = useState('');
+  const [diaryNotes, setDiaryNotes] = useState('');
+  const [diaryRewatch, setDiaryRewatch] = useState(false);
+  const [diaryBusy, setDiaryBusy] = useState(false);
+  const [diaryMessage, setDiaryMessage] = useState<string | null>(null);
   const [firestoreReviews, setFirestoreReviews] = useState<FirestoreReview[]>([]);
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [editingReviewText, setEditingReviewText] = useState('');
@@ -214,6 +223,43 @@ function MovieDetails() {
     }
   };
 
+  const handleLogWatch = async () => {
+    if (!user) {
+      setDiaryMessage('Sign in to log a watch.');
+      return;
+    }
+    if (!diaryDate) {
+      setDiaryMessage('Pick the date you watched this.');
+      return;
+    }
+    const rating = diaryRating === '' ? undefined : Number(diaryRating);
+    if (rating !== undefined && (rating < 1 || rating > 5)) {
+      setDiaryMessage('Your rating must be between 1 and 5.');
+      return;
+    }
+
+    setDiaryBusy(true);
+    setDiaryMessage(null);
+    try {
+      await logDiaryEntry({
+        movieId: Number(id),
+        watchedAt: new Date(`${diaryDate}T00:00:00`).toISOString(),
+        rewatch: diaryRewatch,
+        ...(rating !== undefined ? { rating } : {}),
+        ...(diaryNotes.trim() ? { notes: diaryNotes.trim() } : {}),
+      });
+      setDiaryNotes('');
+      setDiaryRating('');
+      setDiaryRewatch(false);
+      setDiaryDate(today());
+      setDiaryMessage('Logged to your diary.');
+    } catch (err) {
+      setDiaryMessage(getErrorMessage(err, 'Unable to log this watch.'));
+    } finally {
+      setDiaryBusy(false);
+    }
+  };
+
   const handleRemoveTracking = async () => {
     if (!user || !hasWatchEntry) return;
     setTrackingBusy(true);
@@ -341,6 +387,65 @@ function MovieDetails() {
               {trackingMessage && <p className="tracking-message" role="status">{trackingMessage}</p>}
             </div>
           </article>
+
+          <section className="composer-card">
+            <div className="movie-actions">
+              <div className="actions-heading">
+                <h2>Log a watch</h2>
+                <p>Record this viewing in your diary. Log it again any time you rewatch.</p>
+              </div>
+
+              <div className="tracking-fields">
+                <label>
+                  Watched date
+                  <input
+                    type="date"
+                    max={today()}
+                    value={diaryDate}
+                    onChange={(event) => setDiaryDate(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Rating
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="1"
+                    placeholder="1–5"
+                    value={diaryRating}
+                    onChange={(event) => setDiaryRating(event.target.value)}
+                  />
+                </label>
+                <label className="diary-rewatch-field">
+                  <input
+                    type="checkbox"
+                    checked={diaryRewatch}
+                    onChange={(event) => setDiaryRewatch(event.target.checked)}
+                  />
+                  This was a rewatch
+                </label>
+                <label className="tracking-notes">
+                  Notes
+                  <textarea
+                    rows={3}
+                    maxLength={2000}
+                    placeholder="What stood out this time?"
+                    value={diaryNotes}
+                    onChange={(event) => setDiaryNotes(event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="movie-list-actions">
+                <button onClick={handleLogWatch} className="movie-list-button add" disabled={diaryBusy}>
+                  {diaryBusy ? 'Logging…' : 'Log a watch'}
+                </button>
+                <Link to="/diary" className="movie-list-button remove">View diary</Link>
+              </div>
+              {diaryMessage && <p className="tracking-message" role="status">{diaryMessage}</p>}
+            </div>
+          </section>
 
           <section className="composer-card">
             <div className="section-heading">

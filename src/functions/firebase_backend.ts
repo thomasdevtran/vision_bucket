@@ -120,6 +120,36 @@ export interface WatchEntryInput {
   notes?: string;
 }
 
+export interface DiaryEntry {
+  id: string;
+  userId: string;
+  movieId: number;
+  watchedAt: string;
+  rating: number | null;
+  notes: string | null;
+  rewatch: boolean;
+  createdAt: string;
+}
+
+export interface DiaryEntryInput {
+  movieId: number;
+  watchedAt: string;
+  rating?: number;
+  notes?: string;
+  rewatch?: boolean;
+}
+
+export interface DiaryUpdateInput {
+  watchedAt?: string;
+  rating?: number | null;
+  notes?: string;
+}
+
+export interface DiaryPage {
+  entries: DiaryEntry[];
+  nextCursor: string | null;
+}
+
 export interface AppReview {
   id: string;
   movieId: number;
@@ -218,6 +248,33 @@ export const removeWatchEntry = async (_uid: string, movieId: number, status: Wa
     body: JSON.stringify({ movieId }),
   }, true);
 };
+
+// --- Viewing diary (append-only watch log, rewatches allowed) ---------------
+
+export const logDiaryEntry = (input: DiaryEntryInput) =>
+  request<DiaryEntry>('/profile/diary', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }, true);
+
+export const getDiary = (uid: string, options: { cursor?: string | null; limit?: number } = {}) => {
+  const params = new URLSearchParams();
+  if (options.cursor) params.set('cursor', options.cursor);
+  if (options.limit) params.set('limit', String(options.limit));
+  const suffix = params.toString() ? `?${params.toString()}` : '';
+  return request<DiaryPage>(`/profile/diary/${encodeURIComponent(uid)}${suffix}`);
+};
+
+export const updateDiaryEntry = (entryId: string, update: DiaryUpdateInput) =>
+  request<DiaryEntry>(`/profile/diary/${encodeURIComponent(entryId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  }, true);
+
+export const deleteDiaryEntry = (entryId: string) =>
+  request<{ message: string }>(`/profile/diary/${encodeURIComponent(entryId)}`, {
+    method: 'DELETE',
+  }, true);
 
 export const addMovieToUserList = (_uid: string, movieId: number) =>
   saveWatchEntry(_uid, movieId, { status: 'Plan_to_watch' });

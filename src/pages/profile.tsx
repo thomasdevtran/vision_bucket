@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import '../styles/profile.css';
 import Header from '../components/header/header';
@@ -9,7 +10,7 @@ import MovieStats from '../components/profile/movie_stats/MovieStats';
 import TVShowHistory from '../components/profile/tv_show_history/TVShowHistory';
 import MovieHistory from '../components/profile/movie_history/MovieHistory';
 import Reviews from '../components/profile/review_display/MovieReviewCard';
-import { deleteReviewForUser, getReviewsForUser } from '../functions/firebase_backend';
+import { deleteReviewForUser, getDiary, getReviewsForUser } from '../functions/firebase_backend';
 
 interface Review {
   id: string;
@@ -22,6 +23,8 @@ function Profile() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [diaryCount, setDiaryCount] = useState(0);
+  const [diaryLastWatched, setDiaryLastWatched] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -43,6 +46,14 @@ function Profile() {
         setError('Unable to load reviews.');
       } finally {
         setLoading(false);
+      }
+
+      try {
+        const diary = await getDiary(user.uid, { limit: 50 });
+        setDiaryCount(diary.entries.length);
+        setDiaryLastWatched(diary.entries[0]?.watchedAt ?? null);
+      } catch (err) {
+        console.error('Failed to fetch diary summary', err);
       }
     });
 
@@ -77,6 +88,23 @@ function Profile() {
         </div>
 
         <div className="history-panel">
+          <Link to="/diary" className="diary-summary-card">
+            <div>
+              <p className="diary-summary-kicker">Viewing diary</p>
+              <h2 className="diary-summary-title">
+                {diaryCount > 0
+                  ? `${diaryCount}${diaryCount === 50 ? '+' : ''} recent ${diaryCount === 1 ? 'watch' : 'watches'} logged`
+                  : 'Start your viewing diary'}
+              </h2>
+              {diaryLastWatched && (
+                <p className="diary-summary-meta">
+                  Last watched {new Date(diaryLastWatched).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <span className="diary-summary-cta">Open diary →</span>
+          </Link>
+
           <TVShowHistory />
           <MovieHistory />
           <h2 className="profile-section-title">Reviews</h2>

@@ -277,6 +277,24 @@
   transform: none;
 }
 
+a.movie-list-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.tracking-fields label.diary-rewatch-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  align-self: end;
+}
+
+.diary-rewatch-field input {
+  width: auto;
+}
+
 .composer-card,
 .reviews-section {
   padding: 22px;

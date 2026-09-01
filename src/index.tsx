@@ -13,6 +13,7 @@ import Profile from './pages/profile';
 import SearchResult from './pages/search_result';
 import ThreadDetails from './pages/discussions/thread';
 import MovieDetails from './pages/MovieDetails';
+import Diary from './pages/diary';
 import ThreadNewsDetails from './pages/discussions/thread_news';
 import ReviewsList from './pages/reviews_list';
 import { AuthProvider } from './context/AuthContext';
@@ -34,6 +35,7 @@ root.render(
             <Route path="/discussion/general" element={<GeneralDiscussion />} />
             <Route path="/discussion/news" element={<News />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/diary" element={<Diary />} />
             <Route path="/reviews" element={<ReviewsList />} />
             <Route path="/search-result/:query" element={<SearchResult />} />
             <Route path="/threads/:id" element={<ThreadDetails />} />
