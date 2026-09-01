@@ -121,8 +121,7 @@ function MovieDetails() {
   // Post a review
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
     if (!user) {
-      alert('You must be logged in to post a review!');
-      return;
+      throw new Error('Sign in to post a review.');
     }
     try {
       const data = await createReview({
