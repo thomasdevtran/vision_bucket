@@ -18,6 +18,7 @@ import Diary from './pages/diary';
 import ThreadNewsDetails from './pages/discussions/thread_news';
 import ReviewsList from './pages/reviews_list';
 import Feed from './pages/feed';
+import Moderation from './pages/moderation';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -41,6 +42,7 @@ root.render(
             <Route path="/feed" element={<Feed />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/reviews" element={<ReviewsList />} />
+            <Route path="/moderation" element={<Moderation />} />
             <Route path="/search-result/:query" element={<SearchResult />} />
             <Route path="/threads/:id" element={<ThreadDetails />} />
             <Route path="/show/:id" element={<MovieDetails />} />
