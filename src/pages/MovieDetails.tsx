@@ -8,6 +8,7 @@ import ReviewCard from '../components/movie_details/reviews_card';
 import MoviePoster from '../components/movie_details/MoviePoster';
 import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
+import AddToList from '../components/movie_details/AddToList';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import blue_circle from '../assets/circles/blue_circle.png';
 import yellow_circle from '../assets/circles/yellow_circle.png';
@@ -339,6 +340,8 @@ function MovieDetails() {
                 )}
               </div>
               {trackingMessage && <p className="tracking-message" role="status">{trackingMessage}</p>}
+
+              <AddToList movieId={Number(id)} user={user} />
             </div>
           </article>
 

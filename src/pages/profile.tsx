@@ -10,6 +10,7 @@ import TVShowHistory from '../components/profile/tv_show_history/TVShowHistory';
 import MovieHistory from '../components/profile/movie_history/MovieHistory';
 import Reviews from '../components/profile/review_display/MovieReviewCard';
 import { deleteReviewForUser, getReviewsForUser } from '../functions/firebase_backend';
+import MyLists from '../components/profile/my_lists/MyLists';
 
 interface Review {
   id: string;
@@ -77,6 +78,7 @@ function Profile() {
         </div>
 
         <div className="history-panel">
+          <MyLists />
           <TVShowHistory />
           <MovieHistory />
           <h2 className="profile-section-title">Reviews</h2>
