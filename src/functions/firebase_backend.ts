@@ -289,6 +289,42 @@ export const updateReview = async (reviewId: string, update: { content: string; 
   }, true);
 };
 
+// --- Import / export (Feature #10) -----------------------------------------
+
+export interface VisionBucketExport {
+  version: number;
+  exportedAt: string;
+  profile: Record<string, unknown> | null;
+  watchEntries: WatchEntry[];
+  diary: Array<Record<string, unknown>>;
+  reviews: Array<Record<string, unknown>>;
+  lists: Array<Record<string, unknown>>;
+}
+
+export interface ImportCounts {
+  watchEntries: number;
+  diary: number;
+  reviews: number;
+  lists: number;
+}
+
+export interface ImportSummary {
+  imported: ImportCounts;
+  skipped: ImportCounts;
+}
+
+// Download the signed-in user's full data document (their own data only).
+export const exportMyData = () =>
+  request<VisionBucketExport>('/profile/export', {}, true);
+
+// Recreate the signed-in user's entries from an export document. The server
+// ignores any ids in the file and dedupes, so re-importing is safe.
+export const importMyData = (doc: VisionBucketExport) =>
+  request<ImportSummary>('/profile/import', {
+    method: 'POST',
+    body: JSON.stringify(doc),
+  }, true);
+
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 
 export const getThreads = async (name: 'Discussions' | 'News') => {
