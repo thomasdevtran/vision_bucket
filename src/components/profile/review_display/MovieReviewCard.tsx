@@ -48,18 +48,18 @@ const MovieReviewCard: React.FC<MovieReviewCardProps> = ({ movieId, review, rati
   };
 
   if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>;
+    return <p className="history-error">{error}</p>;
   }
 
   return (
-    <div className="movie-review-card" style={{ border: '1px solid #ccc', padding: '16px', margin: '16px', borderRadius: '8px' }}>
-        <div>
+    <div className="profile-movie-review-card">
+        <div className="profile-review-main">
           {movie ? (
             <>
               <img
                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                 alt={movie.title}
-                style={{ width: '100px', height: '150px', objectFit: 'cover', marginBottom: '8px' }}
+                className="profile-review-poster"
               />
               <h3>{movie.title}</h3>
             </>
@@ -69,11 +69,11 @@ const MovieReviewCard: React.FC<MovieReviewCardProps> = ({ movieId, review, rati
           <p><strong>Review:</strong> {review}</p>
           <p><strong>Rating:</strong> {rating}/5</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="profile-review-stars">
         <img
           src={getTempImage(rating)}
           alt={`Rating ${rating}`}
-          style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '16px' }}
+          className="profile-stars-image"
         />
       </div>
     </div>

@@ -5,6 +5,7 @@ import '../../styles/discussion.css';
 import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/discussion/Commentform';
 import { getAuth } from 'firebase/auth';
+import { addCommentToThread, deleteCommentFromThread, getThreadById } from '../../functions/firebase_backend';
 
 function ThreadNewsDetails() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ function ThreadNewsDetails() {
 
   interface Thread {
     id: string;
+    uid: string;
     title: string;
     description: string;
     author: string;
@@ -46,16 +48,11 @@ function ThreadNewsDetails() {
   useEffect(() => {
     const fetchThread = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/news/post/${id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch thread');
-        }
-        const data = await response.json();
-        console.log('Fetched thread:', data);
+        const data = await getThreadById('News', id || '');
 
-        // Map backend fields to match the Thread interface
         const mappedThread = {
           id: data.id,
+          uid: data.uid,
           author: data.Author,
           date: data.Date,
           title: data.Title,
@@ -82,49 +79,28 @@ function ThreadNewsDetails() {
     const date = new Date().toISOString().split('T')[0];
 
     try {
-      const response = await fetch(`http://localhost:5000/news/post/${id}/comment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          author,
-          content: commentText,
-          date,
-          uid: userUid, // Include the user's UID in the comment
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to add comment: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const newComment = data.comment;
-
+      const newComment = {
+        commentId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        author,
+        content: commentText,
+        date,
+        uid: userUid,
+      };
+      await addCommentToThread('News', id || '', newComment);
       setComments(prevComments => [...prevComments, newComment]);
     } catch (error) {
       console.error('Error adding comment:', error);
-      // Optionally show error message to user
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!thread || !userUid) return; // Ensure there's a thread and a user is logged in
+    if (!thread || !userUid) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/news/comment/${id}/${commentId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete comment: ${response.status}`);
-      }
-
+      await deleteCommentFromThread('News', id || '', commentId, userUid);
       setComments(prevComments => prevComments.filter(comment => comment.commentId !== commentId));
     } catch (error) {
       console.error('Error deleting comment:', error);
-      // Optionally show error message to user
     }
   };
 
@@ -135,7 +111,6 @@ function ThreadNewsDetails() {
   return (
     <div className="discussion-page">
       <Header />
-      <div style={{ marginTop: '100px' }}></div>
       <div className="discussion-container">
         {/* Breadcrumb Navigation */}
         <nav className="breadcrumb">
@@ -167,7 +142,12 @@ function ThreadNewsDetails() {
                 <span className="comment-date">{comment.date}</span>
                 {/* Conditionally render the delete button */}
                 {userUid === comment.uid && (
-                  <button onClick={() => handleDeleteComment(comment.commentId)}>Delete</button>
+                  <button
+                    className="comment-delete-button"
+                    onClick={() => handleDeleteComment(comment.commentId)}
+                  >
+                    Delete
+                  </button>
                 )}
               </div>
             ))

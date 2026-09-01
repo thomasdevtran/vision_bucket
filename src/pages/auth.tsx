@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/auth.css';
 import visionBucket from '../assets/VisionBucket.png'
 import Footer from '../components/footer/footer';
+import { createUserProfile } from '../functions/firebase_backend';
 
 function Auth() {
   const [email, setEmail] = useState('');
@@ -24,37 +25,7 @@ function Auth() {
       } else {
         // Sign up
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Extract username from email (everything before @)
-        const username = email.split('@')[0];
-        
-        // Create current timestamp
-        const currentDate = new Date().toISOString();
-        
-        // Create user profile in database
-        const response = await fetch(`http://localhost:5000/profile/create/${userCredential.user.uid}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            Username: username,
-            Joined: currentDate,
-            Last_online: currentDate,
-            movie_list: [],
-            reviews: [],
-            Completed: [],
-            Dropped: [],
-            On_hold: [],
-            Plan_to_watch: [],
-            Watching: [],
-            Rewatched: []
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create user profile');
-        }
+        await createUserProfile(userCredential.user.uid, email);
       }
       // Redirect to home page on success
       navigate('/');

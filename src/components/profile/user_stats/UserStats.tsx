@@ -4,6 +4,7 @@ import user_icon from '../../../assets/user_high.png';
 import mail_icon from '../../../assets/mail_high.png';
 import friend_request_icon from '../../../assets/friend_high.png';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getUserProfile, updateLastOnline } from '../../../functions/firebase_backend';
 
 interface UserData {
     username: string;
@@ -21,22 +22,9 @@ function UserStats() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    // Fetch user data from your backend
-                    const response = await fetch(`http://localhost:5000/profile/data/${user.uid}`);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch user data');
-                    }
-                    const data = await response.json();
+                    const data = await getUserProfile(user.uid);
                     setUserData(data);
-
-                    // Update last online
-                    await fetch(`http://localhost:5000/profile/update/${user.uid}/last_online`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ last_online: new Date() }),
-                    });
+                    await updateLastOnline(user.uid);
                 } catch (error) {
                     console.error('Error fetching user data:', error);
                 } finally {

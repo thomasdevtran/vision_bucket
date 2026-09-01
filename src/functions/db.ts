@@ -1,13 +1,10 @@
-import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { arrayUnion } from 'firebase/firestore';
-
-const db = getFirestore();
+import { auth, db } from './firebase';
 
 export const saveLikedMovie = async (movieId: string) => {
   try {
-    const auth = getAuth();
     const userId = auth.currentUser?.uid;
     
     if (!userId) {

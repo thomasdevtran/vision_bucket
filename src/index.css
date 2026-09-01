@@ -1,13 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #0b0f14;
+  --bg-secondary: #101824;
+  --bg-tertiary: #141f2d;
+  --surface: #121a25;
+  --surface-strong: #172233;
+  --surface-border: #253247;
+  --text-primary: #f7f4ee;
+  --text-secondary: #b8c1ce;
+  --accent: #39d0c7;
+  --accent-strong: #1ab3aa;
+  --highlight: #f6c177;
+  --danger: #ff8a8a;
+  --radius: 18px;
+  --header-height: 82px;
+  --shadow-xl: 0 26px 50px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(57, 208, 199, 0.18) 0, transparent 45%),
+    radial-gradient(circle at 100% 10%, rgba(246, 193, 119, 0.16) 0, transparent 40%),
+    linear-gradient(180deg, #0b0f14 0%, #0c121a 45%, #090f17 100%);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(transparent 0 23px, rgba(255, 255, 255, 0.04) 24px),
+    linear-gradient(90deg, transparent 0 23px, rgba(255, 255, 255, 0.04) 24px);
+  background-size: 24px 24px;
+  opacity: 0.28;
+  mask: radial-gradient(circle at top, rgba(0, 0, 0, 0.82) 0, rgba(0, 0, 0, 0) 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: -0.015em;
+}
+
+a {
+  color: var(--accent);
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+::selection {
+  background: rgba(57, 208, 199, 0.35);
+  color: var(--text-primary);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: Consolas, 'Courier New', monospace;
 }

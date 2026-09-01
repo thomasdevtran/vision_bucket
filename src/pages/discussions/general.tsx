@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
 import DiscussionPreviews from '../../components/discussion/post_preview';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { createThread, deleteThread, getThreads } from '../../functions/firebase_backend';
 
 interface Thread {
   id: string;
@@ -20,21 +21,13 @@ function GeneralDiscussion() {
   const [userId, setUserId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [threads, setThreads] = useState<Thread[]>([]); // Initialize as an empty array
-  const navigate = useNavigate();
+  const [threads, setThreads] = useState<Thread[]>([]);
 
-  // Fetch threads from the backend API
   useEffect(() => {
     const fetchThreads = async () => {
       try {
-        console.log('Fetching threads from backend...');
-        const response = await fetch('http://localhost:5000/discussions/posts');
-        if (!response.ok) {
-          throw new Error('Failed to fetch threads');
-        }
-        const data = await response.json();
+        const data = await getThreads('Discussions');
 
-        // Map backend fields to match the Thread interface
         const mappedThreads = data.map((thread: any) => ({
           id: thread.id,
           uid: thread.uid,
@@ -77,36 +70,19 @@ function GeneralDiscussion() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/discussions/posting', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          Author: username || 'Anonymous',
-          uid: userId,
-          Date: new Date().toISOString().split('T')[0],
-          Comments: [],
-          Title: title,
-          Description: description,
-        }),
+      await createThread('Discussions', {
+        Author: username || 'Anonymous',
+        uid: userId,
+        Date: new Date().toISOString().split('T')[0],
+        Comments: [],
+        Title: title,
+        Description: description,
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to create thread: ${response.status}`);
-      }
-      const responseData = await response.json();
-      console.log('Thread created successfully:', responseData);
       const fetchThreads = async () => {
         try {
-          console.log('Fetching threads from backend...');
-          const response = await fetch('http://localhost:5000/discussions/posts');
-          if (!response.ok) {
-            throw new Error('Failed to fetch threads');
-          }
-          const data = await response.json();
+          const data = await getThreads('Discussions');
 
-          // Map backend fields to match the Thread interface
           const mappedThreads = data.map((thread: any) => ({
             id: thread.id,
             uid: thread.uid,
@@ -125,7 +101,6 @@ function GeneralDiscussion() {
 
       fetchThreads();
 
-      // Clear the form fields
       setTitle('');
       setDescription('');
     } catch (error) {
@@ -135,25 +110,12 @@ function GeneralDiscussion() {
 
   const handleDeleteThread = async (threadId: string, uid: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/discussions/post/${threadId}/${uid}`, {
-        method: 'DELETE',
-      });
+      await deleteThread('Discussions', threadId, uid);
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete thread: ${response.status}`);
-      }
-
-      // Refresh the threads list after successful deletion
       const fetchThreads = async () => {
         try {
-          console.log('Fetching threads from backend...');
-          const response = await fetch('http://localhost:5000/discussions/posts');
-          if (!response.ok) {
-            throw new Error('Failed to fetch threads');
-          }
-          const data = await response.json();
+          const data = await getThreads('Discussions');
 
-          // Map backend fields to match the Thread interface
           const mappedThreads = data.map((thread: any) => ({
             id: thread.id,
             uid: thread.uid,
@@ -179,13 +141,18 @@ function GeneralDiscussion() {
   return (
     <div className="discussion-page">
       <Header />
-      <div style={{marginTop: '100px'}}></div>
       <div className="discussion-container">
         <nav className="breadcrumb">
           <Link to="/discussion" className="breadcrumb-link">Discussion</Link>
           <span className="breadcrumb-separator"> &gt; </span>
           <span className="breadcrumb-current">General</span>
         </nav>
+        <section className="discussion-header">
+          <h1 className="discussion-page-title">General Discussion</h1>
+          <p className="discussion-page-subtitle">
+            Start a new topic or pick up an existing thread. Keep it friendly and stay on theme.
+          </p>
+        </section>
         <main className="thread-creation">
           <h2 className="thread-title">Create a Thread</h2>
           <form className="thread-form" onSubmit={handleSubmit}>

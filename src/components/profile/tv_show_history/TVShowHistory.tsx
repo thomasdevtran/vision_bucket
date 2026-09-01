@@ -36,20 +36,26 @@ function MovieHistory() {
     return (
         <div className="movie-history">
             <h1>TV Show History</h1> 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="history-error">{error}</p>}
             <div className='history-container'>
             <div className="movies-grid">
                 {movies.map((movie) => (
                     <div
                         key={movie.id}
                         className="movie-card"
-                        onClick={() => handleCardClick(movie.id)} // Handle click event
-                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleCardClick(movie.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                handleCardClick(movie.id);
+                            }
+                        }}
                     >
                         <img
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                             alt={movie.title}
-                            style={{ width: '200px', height: '300px', objectFit: 'cover' }}
+                            className="history-poster"
                         />
                         <h3>{movie.title}</h3>
                         <p>{movie.release_date}</p>

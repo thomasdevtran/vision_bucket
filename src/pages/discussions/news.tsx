@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
-import DiscussionPreviews from '../../components/discussion/post_preview';
 import PostPreviewNews from '../../components/discussion/PostPreviewNews';
+import { getThreads } from '../../functions/firebase_backend';
 
 interface Thread {
   id: string;
@@ -20,12 +20,7 @@ function News() {
   useEffect(() => {
     const fetchThreads = async () => {
       try {
-        console.log('Fetching news threads from backend...');
-        const response = await fetch('http://localhost:5000/news/posts');
-        if (!response.ok) {
-          throw new Error('Failed to fetch news threads');
-        }
-        const data = await response.json();
+        const data = await getThreads('News');
 
         const mappedThreads = data.map((thread: any) => ({
           id: thread.id,
@@ -47,14 +42,18 @@ function News() {
   return (
     <div className="discussion-page">
       <Header />
-      <div style={{ marginTop: '100px' }}></div>
       <div className="discussion-container">
         <nav className="breadcrumb">
           <Link to="/discussion" className="breadcrumb-link">Discussion</Link>
           <span className="breadcrumb-separator"> &gt; </span>
           <span className="breadcrumb-current">News</span>
         </nav>
-        <h1>News</h1>
+        <section className="discussion-header">
+          <h1 className="discussion-page-title">News</h1>
+          <p className="discussion-page-subtitle">
+            Headlines, trailers, and industry moves. Tap a card to open the full thread.
+          </p>
+        </section>
         <PostPreviewNews threads={threads} />
       </div>
       <Footer />

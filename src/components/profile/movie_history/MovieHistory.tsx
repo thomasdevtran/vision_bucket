@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../../styles/profile.css';
 import { getMovieDetails, Movie } from '../../../functions/api_service';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getUserProfile } from '../../../functions/firebase_backend';
 
 function MovieHistory() {
     const [movies, setMovies] = useState<Movie[]>([]);
@@ -15,14 +16,8 @@ function MovieHistory() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    // Fetch user data from backend
-                    const response = await fetch(`http://localhost:5000/profile/data/${user.uid}`);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch user data');
-                    }
-                    const userData = await response.json();
+                    const userData = await getUserProfile(user.uid);
 
-                    // Extract movie_list (change this to your actual field name if needed)
                     const movieIds: number[] = userData.movie_list || [];
 
                     // Fetch details for each movie
@@ -58,7 +53,7 @@ function MovieHistory() {
     return (
         <div className="movie-history">
             <h1>Movie History</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="history-error">{error}</p>}
             <div className='history-container'>
                 <div className="movies-grid">
                     {movies.map((movie) => (
@@ -66,12 +61,18 @@ function MovieHistory() {
                             key={movie.id}
                             className="movie-card"
                             onClick={() => handleCardClick(movie.id)}
-                            style={{ cursor: 'pointer' }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                    handleCardClick(movie.id);
+                                }
+                            }}
                         >
                             <img
                                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                                 alt={movie.title}
-                                style={{ width: '200px', height: '300px', objectFit: 'cover' }}
+                                className="history-poster"
                             />
                             <h3>{movie.title}</h3>
                             <p>{movie.release_date}</p>

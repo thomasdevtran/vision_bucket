@@ -11,21 +11,8 @@ function Header() {
   const [email, setEmail] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
   const auth = getAuth();
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -34,12 +21,12 @@ function Header() {
         const username = user.email?.split('@')[0] || '';
         setEmail(username);
       } else {
-        navigate('/auth');
+        setEmail('');
       }
     });
 
     return () => unsubscribe();
-  }, [auth, navigate]);
+  }, [auth]);
 
   const handleProfile = async () => {
     navigate('/profile');
@@ -79,7 +66,13 @@ function Header() {
           </Link>
         </div>
 
-        <div className="bottom-row">
+        <nav className="header-nav" aria-label="Main navigation">
+          <Link to="/" className="header-nav-link">Home</Link>
+          <Link to="/discussion" className="header-nav-link">Discussion</Link>
+          <Link to="/profile" className="header-nav-link">Profile</Link>
+        </nav>
+
+        <div className="header-actions">
           <form className="search-container" onSubmit={handleSearch}>
             <img src={searchIcon} alt="Search" className="search-icon" />
             <input
@@ -91,29 +84,33 @@ function Header() {
             />
           </form>
 
-          <button className="menu-toggle" type="button" onClick={toggleUserMenu}>
-            <span className="menu-avatar">
-              <img src={userIcon} alt="User menu" className="menu-avatar-icon" />
-            </span>
-            <span className="menu-meta">
-              <span className="menu-label">Account</span>
-              <span className="menu-value">{email || 'Guest'}</span>
-            </span>
-          </button>
-          
-          {showUserMenu && (
-            <div className="user-menu">
-              <button onClick={handleProfile} className="option-button">
-                Profile
-              </button>
-              <button onClick={handeldiscussion} className="option-button">
-                Discussion
-              </button>
-              <button onClick={handleSignOut} className="sign-out-button">
-                Sign Out
-              </button>
-            </div>
-          )}
+          <div className="account-menu">
+            <button className="menu-toggle" type="button" onClick={toggleUserMenu}>
+              <span className="menu-avatar">
+                <img src={userIcon} alt="User menu" className="menu-avatar-icon" />
+              </span>
+              <span className="menu-meta">
+                <span className="menu-label">Account</span>
+                <span className="menu-value">{email || 'Guest'}</span>
+              </span>
+            </button>
+
+            {showUserMenu && (
+              <div className="user-menu">
+                <button onClick={handleProfile} className="option-button">
+                  Profile
+                </button>
+                <button onClick={handeldiscussion} className="option-button">
+                  Discussion
+                </button>
+                {email && (
+                  <button onClick={handleSignOut} className="sign-out-button">
+                    Sign Out
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

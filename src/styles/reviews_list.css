@@ -1,38 +1,162 @@
-.search-filter {
-
-}
-
-.film-type-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #222222;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    min-width: 120px;
-    border: 1px solid #444444;
-}
-
-.film-type-dropdown-option {
-    width: 100%;
-    padding: 0.5rem 1rem;
-    border: none;
-    background: none;
-    color: white;
-    cursor: pointer;
+.reviews-main {
+    width: min(1050px, calc(100% - 2rem));
+    margin: 0 auto 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
     text-align: left;
-    border-radius: 4px;
-    transition: background-color 0.2s;
 }
 
-.watch-type-dropdown {
-
+.reviews-post-card,
+.reviews-comments-card {
+    background: linear-gradient(155deg, rgba(20, 30, 44, 0.96) 0%, rgba(12, 18, 26, 0.98) 100%);
+    border: 1px solid rgba(86, 108, 140, 0.5);
+    border-radius: 18px;
+    box-shadow: var(--shadow-lg);
+    padding: 1.4rem;
 }
 
-.search-filter-icons {
-    width: 50px;
-    margin-left: 10px;
-    margin-right: 10px;
+.reviews-post-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+}
+
+.reviews-post-tag {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.reviews-post-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(184, 193, 206, 0.8);
+}
+
+.reviews-post-title {
+    margin: 0.6rem 0 1rem;
+    font-size: clamp(1.25rem, 2.4vw, 2.1rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+}
+
+.reviews-post-image {
+    width: 100%;
+    min-height: 420px;
+    border-radius: 16px;
+    border: 1px solid rgba(86, 108, 140, 0.5);
+    background:
+        radial-gradient(circle at 65% 20%, rgba(57, 208, 199, 0.26) 0, rgba(57, 208, 199, 0) 28%),
+        radial-gradient(circle at 50% 78%, rgba(246, 193, 119, 0.18) 0, rgba(246, 193, 119, 0) 42%),
+        linear-gradient(165deg, #263142 0%, #1a2331 42%, #121a28 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.reviews-post-image::before {
+    content: '';
+    position: absolute;
+    inset: 10% 45% 10% 45%;
+    border-radius: 999px;
+    border: 3px solid rgba(247, 244, 238, 0.72);
+    background: linear-gradient(180deg, rgba(191, 209, 235, 0.22) 0%, rgba(117, 137, 169, 0.11) 100%);
+    box-shadow:
+        0 0 0 18px rgba(57, 208, 199, 0.18),
+        inset 0 0 0 3px rgba(225, 236, 255, 0.18);
+}
+
+.reviews-post-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(4, 7, 11, 0.32) 0%, rgba(4, 7, 11, 0.58) 100%),
+        repeating-linear-gradient(90deg, transparent 0 58px, rgba(200, 220, 255, 0.08) 58px 61px);
+    mix-blend-mode: screen;
+}
+
+.reviews-post-stats {
+    margin-top: 0.9rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.reviews-comments-card h2 {
+    margin: 0 0 0.8rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.review-comment {
+    padding: 0.9rem 0.95rem;
+    border-radius: 12px;
+    border: 1px solid rgba(86, 108, 140, 0.45);
+    background: rgba(12, 18, 26, 0.92);
+}
+
+.review-comment + .review-comment {
+    margin-top: 0.8rem;
+}
+
+.review-comment.is-reply {
+    margin-left: 2rem;
+    border-left: 2px solid rgba(57, 208, 199, 0.5);
+}
+
+.review-comment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.review-author {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.review-separator {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(184, 193, 206, 0.7);
+}
+
+.review-comment p {
+    margin: 0;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    font-size: 0.93rem;
+}
+
+@media (max-width: 700px) {
+    .reviews-main {
+        width: calc(100% - 1rem);
+    }
+
+    .reviews-post-card,
+    .reviews-comments-card {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+
+    .reviews-post-image {
+        min-height: 300px;
+    }
+
+    .review-comment.is-reply {
+        margin-left: 0.7rem;
+    }
 }

@@ -8,21 +8,21 @@ import ReviewCard from '../components/movie_details/reviews_card';
 import MoviePoster from '../components/movie_details/MoviePoster';
 import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
-import otherReviews from '../data/other_reviews.json';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import green_circle from '../assets/circles/green_circle.png';
 import blue_circle from '../assets/circles/blue_circle.png';
 import yellow_circle from '../assets/circles/yellow_circle.png';
 import red_circle from '../assets/circles/red_circle.png';
 import grey_circle from '../assets/circles/grey_circle.png';
-import { arrayUnion, arrayRemove } from 'firebase/firestore'; // Only if you use them directly elsewhere
-
-interface Review {
-  movieId: number;
-  review: string;
-  rating: number;
-  author: string;
-}
+import {
+  addMovieToUserList,
+  createReview,
+  deleteReviewForUser,
+  getReviewsForMovie,
+  getUserProfile,
+  removeMovieFromUserList,
+  setMovieStatus,
+} from '../functions/firebase_backend';
 
 const STATUS_OPTIONS = [
   { value: 'Watching', label: 'Watching', icon: green_circle },
@@ -46,13 +46,10 @@ function MovieDetails() {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [inMovieList, setInMovieList] = useState<boolean>(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>(''); // was 'Watching'
-  const [statusLoading, setStatusLoading] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [firestoreReviews, setFirestoreReviews] = useState<FirestoreReview[]>([]);
-  const [userStatusLists, setUserStatusLists] = useState<Record<string, number[]>>({});
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -69,39 +66,16 @@ function MovieDetails() {
   }, [id]);
 
   useEffect(() => {
-    if (id) {
-      const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-      const movieLocalReviews = localReviews.filter(
-        (review: Review) => review.movieId === Number(id)
-      );
-      const movieJsonReviews = otherReviews.find(
-        (entry) => entry.movie === Number(id)
-      )?.reviews || [];
-      setReviews([...movieJsonReviews, ...movieLocalReviews]);
-    }
-  }, [id]);
-
-  useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
-          const response = await fetch(`http://localhost:5000/profile/data/${firebaseUser.uid}`);
-          if (!response.ok) throw new Error('Failed to fetch user data');
-          const userData = await response.json();
-          // Save all status lists
-          setUserStatusLists({
-            Watching: userData.Watching || [],
-            Completed: userData.Completed || [],
-            On_hold: userData.On_hold || [],
-            Dropped: userData.Dropped || [],
-            Plan_to_watch: userData.Plan_to_watch || [],
-          });
-          // Set initial selected status if movie is in any list
+          const userData = await getUserProfile(firebaseUser.uid);
           const foundStatus = Object.entries(userData)
             .find(([status, arr]) => Array.isArray(arr) && arr.includes(Number(id)));
           if (foundStatus) setSelectedStatus(foundStatus[0]);
+          setInMovieList((userData.movie_list || []).includes(Number(id)));
         } catch (err) {
           console.error('Failed to fetch user movie lists:', err);
         }
@@ -115,10 +89,8 @@ function MovieDetails() {
     const fetchReviews = async () => {
       if (!id) return;
       try {
-        const response = await fetch(`http://localhost:5000/reviews/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch reviews');
-        const data = await response.json();
-        setFirestoreReviews(data); // <-- data is now an array
+        const data = await getReviewsForMovie(Number(id));
+        setFirestoreReviews(data);
       } catch (err) {
         setFirestoreReviews([]);
       }
@@ -133,26 +105,14 @@ function MovieDetails() {
       return;
     }
     try {
-      const response = await fetch('http://localhost:5000/reviews/posting', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          movieId: Number(id),
-          Author: user.displayName || user.email || 'Anonymous',
-          content: reviewText,
-          rating,
-          uid: user.uid,
-        }),
+      const data = await createReview({
+        movieId: Number(id),
+        Author: user.displayName || user.email || 'Anonymous',
+        content: reviewText,
+        rating,
+        uid: user.uid,
       });
-      if (!response.ok) throw new Error('Failed to post review');
-      const data = await response.json();
-      // Add reviewId to user's profile
-      await fetch(`http://localhost:5000/profile/update/${user.uid}/add_review`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewId: data.id }),
-      });
-      setFirestoreReviews((prev) => [...prev, { ...data.review, id: data.id }]);
+      setFirestoreReviews((prev) => [data, ...prev]);
       alert('Review submitted successfully!');
     } catch (err) {
       alert('Failed to submit review.');
@@ -167,17 +127,7 @@ function MovieDetails() {
       return;
     }
     try {
-      // Delete review from Reviews collection
-      const response = await fetch(`http://localhost:5000/reviews/${reviewId}/${user.uid}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete review');
-      // Remove reviewId from user's profile
-      await fetch(`http://localhost:5000/profile/update/${user.uid}/remove_review`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewId }),
-      });
+      await deleteReviewForUser(reviewId, user.uid);
       setFirestoreReviews((prev) => prev.filter((r) => r.id !== reviewId));
       alert('Review deleted successfully!');
     } catch (err) {
@@ -193,15 +143,7 @@ function MovieDetails() {
       return;
     }
     try {
-      const response = await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/add_movie_list`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ movieId: Number(id) }),
-        }
-      );
-      if (!response.ok) throw new Error('Failed to add movie');
+      await addMovieToUserList(user.uid, Number(id));
       setInMovieList(true);
       alert('Movie added to your list!');
     } catch (err) {
@@ -217,15 +159,7 @@ function MovieDetails() {
       return;
     }
     try {
-      const response = await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/remove_movie_list`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ movieId: Number(id) }),
-        }
-      );
-      if (!response.ok) throw new Error('Failed to remove movie');
+      await removeMovieFromUserList(user.uid, Number(id));
       setInMovieList(false);
       alert('Movie removed from your list!');
     } catch (err) {
@@ -236,21 +170,11 @@ function MovieDetails() {
 
   const fetchUserStatusLists = async (uid: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/profile/data/${uid}`);
-      if (!response.ok) throw new Error('Failed to fetch user data');
-      const userData = await response.json();
-      setUserStatusLists({
-        Watching: userData.Watching || [],
-        Completed: userData.Completed || [],
-        On_hold: userData.On_hold || [],
-        Dropped: userData.Dropped || [],
-        Plan_to_watch: userData.Plan_to_watch || [],
-      });
-      // Update selectedStatus if movie is in any list
+      const userData = await getUserProfile(uid);
       const foundStatus = Object.entries(userData)
         .find(([status, arr]) => Array.isArray(arr) && arr.includes(Number(id)));
       if (foundStatus) setSelectedStatus(foundStatus[0]);
-      else setSelectedStatus(''); // If not in any list
+      else setSelectedStatus('');
     } catch (err) {
       console.error('Failed to fetch user movie lists:', err);
     }
@@ -262,38 +186,14 @@ function MovieDetails() {
       alert('You must be logged in to update movie status.');
       return;
     }
-    setStatusLoading(true);
     try {
-      // Remove from all other status lists
-      for (const status of Object.keys(userStatusLists)) {
-        if (status !== newStatus && userStatusLists[status]?.includes(Number(id))) {
-          await fetch(
-            `http://localhost:5000/profile/update/${user.uid}/${status}/remove_movie`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ movieId: Number(id) }),
-            }
-          );
-        }
-      }
-      // Add to new status list
-      await fetch(
-        `http://localhost:5000/profile/update/${user.uid}/${newStatus}/add_movie`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ movieId: Number(id) }),
-        }
-      );
-      // Refetch status lists to update UI
+      await setMovieStatus(user.uid, Number(id), newStatus);
       await fetchUserStatusLists(user.uid);
       alert(`Movie set to "${newStatus.replace(/_/g, ' ')}"!`);
     } catch (err) {
       alert('Failed to update movie status.');
       console.error(err);
     }
-    setStatusLoading(false);
   };
 
   if (error) {
@@ -305,76 +205,144 @@ function MovieDetails() {
   }
 
   return (
-    <div className="movie-details-container">
+    <div className="movie-details-page">
       <Header />
-      <div style={{marginTop: '100px'}}></div>
-      <div className="movie-details">
-        <MoviePoster
-          posterPath={movie.poster_path}
-          title={movie.title}
-          releaseDate={movie.release_date}
-          voteAverage={movie.vote_average}
-        />
-        <MovieOverview overview={movie.overview} />
-        <div className="movie-actions">
-          <b>Set Movie Status:</b>
-          <div style={{ display: 'flex', gap: 16, margin: '10px 0' }}>
-            {STATUS_OPTIONS.map(option => (
-              <label key={option.value} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <input
-                  type="radio"
-                  name="movie-status"
-                  value={option.value}
-                  checked={selectedStatus === option.value}
-                  onChange={() => handleSetStatus(option.value)}
-                />
-                <img src={option.icon} alt={option.label} style={{ width: 20, height: 20 }} />
-                {option.label}
-              </label>
-            ))}
-          </div>
-          {/* Movie List Button */}
-          <div style={{ marginTop: 16 }}>
-            {inMovieList ? (
-              <button onClick={handleRemoveFromMovies} style={{ background: '#eee', color: '#c00', padding: '8px 16px', borderRadius: 4 }}>
-                Remove from Movie List
-              </button>
-            ) : (
-              <button onClick={handleAddToMovies} style={{ background: '#007bff', color: '#fff', padding: '8px 16px', borderRadius: 4 }}>
-                Add to Movie List
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="other-reviews">
-          <h2>Write a review!</h2>
-          <ReviewForm onSubmit={handleReviewSubmit} />
-        </div>
-        <div className="movie-reviews">
-          <h2>Reviews</h2>
-          {firestoreReviews.length > 0 ? (
-            firestoreReviews.map((review) => (
-              <div key={review.id} style={{ marginBottom: 16 }}>
-                <ReviewCard
-                  review={review.content}
-                  author={review.Author}
-                  rating={review.rating}
-                />
-                {user && user.uid === review.uid && (
-                  <button
-                    onClick={() => handleDeleteReview(review.id, review.uid)}
-                    style={{ marginTop: 4, color: 'red' }}
-                  >
-                    Delete
+      <main className="details-layout">
+        <section className="details-feed">
+          <article className="movie-thread-card">
+            <div className="thread-topline">
+              <span className="thread-community">{movie.title}</span>
+              <span className="thread-separator">•</span>
+              <span className="thread-age">Movie discussion</span>
+            </div>
+
+            <MoviePoster
+              posterPath={movie.poster_path}
+              title={movie.title}
+              releaseDate={movie.release_date}
+              voteAverage={movie.vote_average}
+            />
+
+            <MovieOverview overview={movie.overview} />
+
+            <div className="movie-actions">
+              <div className="actions-heading">
+                <h2>Track this movie</h2>
+                <p>Set a status or add it to your list so it stays in your profile.</p>
+              </div>
+
+              <div className="movie-status-group">
+                {STATUS_OPTIONS.map((option) => (
+                  <label key={option.value} className={`status-option ${selectedStatus === option.value ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="movie-status"
+                      value={option.value}
+                      checked={selectedStatus === option.value}
+                      onChange={() => handleSetStatus(option.value)}
+                    />
+                    <img src={option.icon} alt={option.label} className="status-icon" />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="movie-list-actions">
+                {inMovieList ? (
+                  <button onClick={handleRemoveFromMovies} className="movie-list-button remove">
+                    Remove from Movie List
+                  </button>
+                ) : (
+                  <button onClick={handleAddToMovies} className="movie-list-button add">
+                    Add to Movie List
                   </button>
                 )}
               </div>
-            ))
-          ) : (
-            <p>No reviews yet. Be the first to review!</p>
-          )}
-        </div>
-      </div>
+            </div>
+          </article>
+
+          <section className="composer-card">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">Share your take</p>
+                <h2>Write a review</h2>
+              </div>
+              <p className="section-helper">Keep it thoughtful, short, and honest.</p>
+            </div>
+            <ReviewForm onSubmit={handleReviewSubmit} />
+          </section>
+
+          <section className="reviews-section">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">Community reactions</p>
+                <h2>Reviews</h2>
+              </div>
+              <p className="section-helper">{firestoreReviews.length} posts</p>
+            </div>
+
+            <div className="reviews-list">
+              {firestoreReviews.length > 0 ? (
+                firestoreReviews.map((review, index) => (
+                  <div key={review.id} className="review-item">
+                    <ReviewCard
+                      review={review.content}
+                      author={review.Author}
+                      rating={review.rating}
+                      index={index}
+                    />
+                    {user && user.uid === review.uid && (
+                      <button
+                        onClick={() => handleDeleteReview(review.id, review.uid)}
+                        className="review-delete-button"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <h3>No reviews yet</h3>
+                  <p>Be the first to post something thoughtful about this movie.</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </section>
+
+        <aside className="details-sidebar">
+          <div className="sidebar-card">
+            <p className="sidebar-label">Up next</p>
+            <h3>Movie snapshot</h3>
+            <p>
+              {movie.title} is currently sitting at a {movie.vote_average.toFixed(1)}/10 average rating
+              on TMDB.
+            </p>
+          </div>
+
+          <div className="sidebar-card">
+            <p className="sidebar-label">Posting style</p>
+            <h3>Keep it readable</h3>
+            <p>
+              Use short paragraphs and clear opinions. The feed works best when reviews feel like real
+              comments, not long form essays.
+            </p>
+          </div>
+
+          <div className="sidebar-card subtle">
+            <p className="sidebar-label">Status legend</p>
+            <ul className="status-legend">
+              {STATUS_OPTIONS.map((option) => (
+                <li key={option.value}>
+                  <img src={option.icon} alt="" className="status-icon" />
+                  {option.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </main>
       <Footer />
     </div>
   );

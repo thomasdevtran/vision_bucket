@@ -15,35 +15,15 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form className="comment-form" onSubmit={handleSubmit} style={{ marginTop: '16px' }}>
+    <form className="comment-form" onSubmit={handleSubmit}>
       <textarea
-        style={{
-          width: '100%',
-          height: '70px',
-          marginBottom: '10px',
-          resize: 'none',
-          backgroundColor: '#222222',
-          borderRadius: '5px',
-          color: '#fff',
-          border: '1px solid #444'
-        }}
+        className="comment-input"
         placeholder="Write your comment here..."
         value={commentText}
         onChange={(e) => setCommentText(e.target.value)}
         rows={3}
       />
-      <button
-        type="submit"
-        style={{
-          width: '100%',
-          height: '36px',
-          backgroundColor: '#2D2D2D',
-          color: '#fff',
-          borderRadius: '8px',
-          border: 'none',
-          fontWeight: 'bold'
-        }}
-      >
+      <button type="submit" className="comment-submit">
         Post Comment
       </button>
     </form>
