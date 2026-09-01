@@ -69,6 +69,7 @@ function Header() {
         <nav className="header-nav" aria-label="Main navigation">
           <Link to="/" className="header-nav-link">Home</Link>
           <Link to="/discussion" className="header-nav-link">Discussion</Link>
+          <Link to="/feed" className="header-nav-link">Feed</Link>
           <Link to="/profile" className="header-nav-link">Profile</Link>
         </nav>
 
