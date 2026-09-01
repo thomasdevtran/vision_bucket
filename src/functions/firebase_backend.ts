@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config';
 import { auth } from './firebase';
+import type { Movie } from './api_service';
 
 export class ApiError extends Error {
   status: number;
@@ -201,6 +202,22 @@ export const updateLastOnline = async (_uid?: string) => {
 
 export const getWatchEntries = (uid: string) =>
   request<WatchEntry[]>(`/profile/watch_entries/${encodeURIComponent(uid)}`);
+
+export interface RecommendationsResponse {
+  results: Movie[];
+  fallback: boolean;
+  reason?: string;
+  preferredGenres?: string[];
+}
+
+// Personalized "For You" feed for the signed-in user. Returns ranked movies in
+// the shared Movie shape; a 503 movie_provider_not_configured surfaces as an
+// ApiError the caller can message with getErrorMessage.
+export const getRecommendations = async (limit?: number): Promise<Movie[]> => {
+  const suffix = typeof limit === 'number' ? `?limit=${encodeURIComponent(limit)}` : '';
+  const data = await request<RecommendationsResponse>(`/recommendations${suffix}`, {}, true);
+  return data.results;
+};
 
 export const saveWatchEntry = async (_uid: string, movieId: number, input: WatchEntryInput) => {
   const { entry } = await request<{ message: string; entry: WatchEntry }>(
