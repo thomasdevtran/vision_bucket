@@ -12,7 +12,7 @@ test('requires a review and a rating before submitting', async () => {
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
-test('submits trimmed review content with a server-valid rating', async () => {
+test('submits trimmed review content with a server-valid rating and no spoiler flag by default', async () => {
   const onSubmit = jest.fn().mockResolvedValue(undefined);
   render(<ReviewForm onSubmit={onSubmit} />);
 
@@ -22,5 +22,19 @@ test('submits trimmed review content with a server-valid rating', async () => {
   fireEvent.change(screen.getByRole('combobox'), { target: { value: '4' } });
   fireEvent.click(screen.getByRole('button', { name: /post review/i }));
 
-  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('A sharp, memorable film.', 4));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('A sharp, memorable film.', 4, false));
+});
+
+test('marks the review as a spoiler when the checkbox is ticked', async () => {
+  const onSubmit = jest.fn().mockResolvedValue(undefined);
+  render(<ReviewForm onSubmit={onSubmit} />);
+
+  fireEvent.change(screen.getByPlaceholderText('What did you think?'), {
+    target: { value: 'The killer was the butler.' },
+  });
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: '5' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: /contains spoilers/i }));
+  fireEvent.click(screen.getByRole('button', { name: /post review/i }));
+
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('The killer was the butler.', 5, true));
 });

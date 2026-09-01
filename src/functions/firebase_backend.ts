@@ -58,6 +58,22 @@ const request = async <T,>(path: string, options: RequestInit = {}, authenticate
   return readResponse<T>(response);
 };
 
+// Like `request`, but the bearer token is optional: it is attached when the
+// user is signed in (so the backend can compute reactedByMe) and omitted
+// otherwise. Never throws for missing auth — used by public review reads.
+const requestMaybeAuth = async <T,>(path: string, options: RequestInit = {}): Promise<T> => {
+  const token = (await auth.currentUser?.getIdToken().catch(() => null)) ?? null;
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+  return readResponse<T>(response);
+};
+
 export const authFetch = async (
   path: string,
   options: RequestInit = {},
@@ -158,6 +174,15 @@ export interface AppReview {
   rating: number;
   uid?: string;
   date: string;
+  reactionCount: number;
+  reactedByMe?: boolean;
+  isSpoiler?: boolean;
+}
+
+export interface ReactionResult {
+  message: string;
+  reactionCount: number;
+  reactedByMe: boolean;
 }
 
 export interface AppComment {
@@ -307,7 +332,16 @@ export const setMovieStatus = (_uid: string, movieId: number, status: string) =>
   return saveWatchEntry(_uid, movieId, { status: status as WatchStatus });
 };
 
-export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
+export interface CreateReviewInput {
+  movieId: number;
+  Author: string;
+  content: string;
+  rating: number;
+  uid?: string;
+  isSpoiler?: boolean;
+}
+
+export const createReview = async (payload: CreateReviewInput) => {
   const result = await request<{ id: string; review: Omit<AppReview, 'id' | 'uid'> }>('/reviews/posting', {
     method: 'POST',
     body: JSON.stringify({
@@ -315,6 +349,7 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
       Author: payload.Author,
       content: payload.content,
       rating: payload.rating,
+      isSpoiler: payload.isSpoiler ?? false,
     }),
   }, true);
 
@@ -325,13 +360,24 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
   return { id: result.id, ...result.review, uid: auth.currentUser?.uid } as AppReview;
 };
 
-export const getReviewsForMovie = async (movieId: number) => {
-  const reviews = await request<AppReview[]>(`/reviews/movie/${movieId}`);
-  return sortByDateDesc(reviews);
-};
+// Public reads go through the backend so reactionCount/isSpoiler are included
+// and reactedByMe is resolved from the caller's token when signed in.
+export const getReviewsForMovie = (movieId: number) =>
+  requestMaybeAuth<AppReview[]>(`/reviews/movie/${movieId}`);
 
 export const getReviewById = (reviewId: string) =>
-  request<AppReview>(`/reviews/${encodeURIComponent(reviewId)}`);
+  requestMaybeAuth<AppReview>(`/reviews/${encodeURIComponent(reviewId)}`);
+
+export const reactToReview = (reviewId: string, type: string = 'helpful') =>
+  request<ReactionResult>(`/reviews/${encodeURIComponent(reviewId)}/reactions`, {
+    method: 'POST',
+    body: JSON.stringify({ type }),
+  }, true);
+
+export const unreactToReview = (reviewId: string) =>
+  request<ReactionResult>(`/reviews/${encodeURIComponent(reviewId)}/reactions`, {
+    method: 'DELETE',
+  }, true);
 
 export const getReviewsForUser = async (uid: string) => {
   const profile = await getUserProfile(uid);
@@ -347,7 +393,10 @@ export const deleteReviewForUser = async (reviewId: string, _uid?: string) => {
   }, true);
 };
 
-export const updateReview = async (reviewId: string, update: { content: string; rating: number }) => {
+export const updateReview = async (
+  reviewId: string,
+  update: { content?: string; rating?: number; isSpoiler?: boolean }
+) => {
   await request<{ message: string }>(`/reviews/${encodeURIComponent(reviewId)}`, {
     method: 'PATCH',
     body: JSON.stringify(update),

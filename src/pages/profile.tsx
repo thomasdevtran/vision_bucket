@@ -19,6 +19,9 @@ interface Review {
   movieId: number;
   content: string;
   rating: number;
+  reactionCount?: number;
+  reactedByMe?: boolean;
+  isSpoiler?: boolean;
 }
 
 function Profile() {
@@ -161,6 +164,10 @@ function Profile() {
                     movieId={review.movieId}
                     review={review.content}
                     rating={review.rating}
+                    reviewId={review.id}
+                    reactionCount={review.reactionCount ?? 0}
+                    reactedByMe={review.reactedByMe ?? false}
+                    isSpoiler={review.isSpoiler ?? false}
                   />
                   {isOwnProfile && (
                     <button className="profile-delete-button" onClick={() => removeReview(review.id)}>

@@ -45,6 +45,9 @@ interface FirestoreReview {
   rating: number;
   uid?: string;
   date: string;
+  reactionCount?: number;
+  reactedByMe?: boolean;
+  isSpoiler?: boolean;
 }
 
 function MovieDetails() {
@@ -129,7 +132,7 @@ function MovieDetails() {
   }, [id]);
 
   // Post a review
-  const handleReviewSubmit = async (reviewText: string, rating: number) => {
+  const handleReviewSubmit = async (reviewText: string, rating: number, isSpoiler: boolean) => {
     if (!user) {
       throw new Error('Sign in to post a review.');
     }
@@ -140,6 +143,7 @@ function MovieDetails() {
         content: reviewText,
         rating,
         uid: user.uid,
+        isSpoiler,
       });
       setFirestoreReviews((prev) => [data, ...prev]);
       alert('Review submitted successfully!');
@@ -498,6 +502,10 @@ function MovieDetails() {
                         author={review.Author}
                         rating={review.rating}
                         index={index}
+                        reviewId={review.id}
+                        reactionCount={review.reactionCount ?? 0}
+                        reactedByMe={review.reactedByMe ?? false}
+                        isSpoiler={review.isSpoiler ?? false}
                       />
                     )}
                     {user && user.uid === review.uid && editingReviewId !== review.id && (
