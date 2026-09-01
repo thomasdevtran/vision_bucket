@@ -249,6 +249,26 @@ export const resolveReport = (id: string, input: ResolveReportInput) =>
     true
   );
 
+export type NotificationType = 'follow' | 'reaction' | 'comment';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  actorUid: string;
+  actorName: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsPage {
+  notifications: AppNotification[];
+  unreadCount: number;
+  nextCursor: string | null;
+}
 const DEFAULT_PROFILE = (username: string, timestamp: string): UserProfile => ({
   Username: username,
   username,
@@ -588,6 +608,23 @@ export const removeCollaborator = (id: string, uid: string) =>
   request<MovieList>(`/lists/${encodeURIComponent(id)}/collaborators/${encodeURIComponent(uid)}`, {
     method: 'DELETE',
   }, true);
+
+// Notifications -------------------------------------------------------------
+// The recipient is always the authenticated caller (derived from the token
+// server-side), so these never take a uid.
+
+export const getNotifications = (cursor?: string) =>
+  request<NotificationsPage>(
+    `/notifications${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+    {},
+    true
+  );
+
+export const markNotificationRead = (id: string) =>
+  request<AppNotification>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'POST' }, true);
+
+export const markAllNotificationsRead = () =>
+  request<{ message: string; updated: number }>('/notifications/read-all', { method: 'POST' }, true);
 
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 
