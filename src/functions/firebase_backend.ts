@@ -1,6 +1,5 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { API_BASE_URL } from '../config';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
 
 export class ApiError extends Error {
   status: number;
@@ -252,21 +251,13 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
   return { id: result.id, ...result.review, uid: auth.currentUser?.uid } as AppReview;
 };
 
-const reviewsCollection = collection(db, 'Reviews');
-
 export const getReviewsForMovie = async (movieId: number) => {
-  const snapshot = await getDocs(query(reviewsCollection, where('movieId', '==', movieId)));
-  return sortByDateDesc(snapshot.docs.map((reviewDoc) => ({
-    id: reviewDoc.id,
-    ...(reviewDoc.data() as Omit<AppReview, 'id'>),
-  })));
+  const reviews = await request<AppReview[]>(`/reviews/movie/${movieId}`);
+  return sortByDateDesc(reviews);
 };
 
-export const getReviewById = async (reviewId: string) => {
-  const snapshot = await getDoc(doc(db, 'Reviews', reviewId));
-  if (!snapshot.exists()) throw new ApiError('Review not found', 404, { code: 'not_found' });
-  return { id: snapshot.id, ...(snapshot.data() as Omit<AppReview, 'id'>) };
-};
+export const getReviewById = (reviewId: string) =>
+  request<AppReview>(`/reviews/${encodeURIComponent(reviewId)}`);
 
 export const getReviewsForUser = async (uid: string) => {
   const profile = await getUserProfile(uid);

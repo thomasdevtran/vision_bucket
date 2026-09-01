@@ -8,10 +8,11 @@ function MovieHistory() {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate(); // Hook for navigation
 
-    // Example watched movie IDs. Replace these with actual IDs from your database or API.
-    const watchedMovieIds = JSON.parse(localStorage.getItem('shows') || '[]');// Replace with actual movie IDs
-
     useEffect(() => {
+        // Watched show IDs are persisted in localStorage. Read them inside the
+        // effect so the effect has no external, per-render dependency.
+        const watchedMovieIds: number[] = JSON.parse(localStorage.getItem('shows') || '[]');
+
         const fetchMovies = async () => {
             try {
                 const fetchedMovies: Movie[] = [];
