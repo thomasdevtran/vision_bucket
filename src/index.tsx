@@ -14,6 +14,7 @@ import SearchResult from './pages/search_result';
 import ThreadDetails from './pages/discussions/thread';
 import MovieDetails from './pages/MovieDetails';
 import ListDetail from './pages/ListDetail';
+import Diary from './pages/diary';
 import ThreadNewsDetails from './pages/discussions/thread_news';
 import ReviewsList from './pages/reviews_list';
 import Feed from './pages/feed';
@@ -38,6 +39,7 @@ root.render(
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:uid" element={<Profile />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/diary" element={<Diary />} />
             <Route path="/reviews" element={<ReviewsList />} />
             <Route path="/search-result/:query" element={<SearchResult />} />
             <Route path="/threads/:id" element={<ThreadDetails />} />

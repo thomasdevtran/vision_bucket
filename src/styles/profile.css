@@ -109,6 +109,54 @@
     margin-top: 0.4rem;
 }
 
+.diary-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    background: linear-gradient(180deg, rgba(20, 30, 44, 0.95) 0%, rgba(12, 18, 26, 0.98) 100%);
+    color: var(--text-primary);
+    border: 1px solid rgba(86, 108, 140, 0.5);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.diary-summary-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(122, 162, 255, 0.7);
+}
+
+.diary-summary-kicker {
+    margin: 0 0 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    color: #7aa2ff;
+    font-weight: 700;
+}
+
+.diary-summary-title {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.diary-summary-meta {
+    margin: 6px 0 0;
+    color: var(--text-secondary, #9ea6bb);
+    font-size: 0.88rem;
+}
+
+.diary-summary-cta {
+    flex: 0 0 auto;
+    color: #cdd7ff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .movie-history {
     text-align: left;
     margin-bottom: 14px;

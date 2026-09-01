@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import '../styles/profile.css';
 import Header from '../components/header/header';
@@ -11,7 +11,7 @@ import TVShowHistory from '../components/profile/tv_show_history/TVShowHistory';
 import MovieHistory from '../components/profile/movie_history/MovieHistory';
 import Reviews from '../components/profile/review_display/MovieReviewCard';
 import FollowSection from '../components/follow/FollowSection';
-import { deleteReviewForUser, getReviewsForUser } from '../functions/firebase_backend';
+import { deleteReviewForUser, getDiary, getReviewsForUser } from '../functions/firebase_backend';
 import MyLists from '../components/profile/my_lists/MyLists';
 
 interface Review {
@@ -27,6 +27,8 @@ function Profile() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [diaryCount, setDiaryCount] = useState(0);
+  const [diaryLastWatched, setDiaryLastWatched] = useState<string | null>(null);
 
   // The profile being viewed: a route uid (another user) or the signed-in user.
   const profileUid = routeUid || currentUid;
@@ -39,6 +41,26 @@ function Profile() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Diary summary reflects the signed-in user's own recent watches.
+  useEffect(() => {
+    if (!isOwnProfile || !currentUid) {
+      setDiaryCount(0);
+      setDiaryLastWatched(null);
+      return;
+    }
+    let active = true;
+    getDiary(currentUid, { limit: 50 })
+      .then((diary) => {
+        if (!active) return;
+        setDiaryCount(diary.entries.length);
+        setDiaryLastWatched(diary.entries[0]?.watchedAt ?? null);
+      })
+      .catch((err) => console.error('Failed to fetch diary summary', err));
+    return () => {
+      active = false;
+    };
+  }, [isOwnProfile, currentUid]);
 
   useEffect(() => {
     if (!profileUid) {
@@ -103,6 +125,22 @@ function Profile() {
         <div className="history-panel">
           {isOwnProfile && (
             <>
+              <Link to="/diary" className="diary-summary-card">
+                <div>
+                  <p className="diary-summary-kicker">Viewing diary</p>
+                  <h2 className="diary-summary-title">
+                    {diaryCount > 0
+                      ? `${diaryCount}${diaryCount === 50 ? '+' : ''} recent ${diaryCount === 1 ? 'watch' : 'watches'} logged`
+                      : 'Start your viewing diary'}
+                  </h2>
+                  {diaryLastWatched && (
+                    <p className="diary-summary-meta">
+                      Last watched {new Date(diaryLastWatched).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                <span className="diary-summary-cta">Open diary →</span>
+              </Link>
               <MyLists />
               <TVShowHistory />
               <MovieHistory />
