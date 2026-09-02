@@ -6,6 +6,7 @@ import '../../styles/header.css';
 import userIcon from '../../assets/userIcon.png';
 import searchIcon from '../../assets/searchIcon.png';
 import VisionBucket from '../../assets/VisionBucket.png';
+import NotificationBell from '../notifications/NotificationBell';
 
 function Header() {
   const [email, setEmail] = useState('');
@@ -84,6 +85,8 @@ function Header() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
+
+          <NotificationBell />
 
           <div className="account-menu">
             <button className="menu-toggle" type="button" onClick={toggleUserMenu}>

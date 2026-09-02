@@ -662,6 +662,25 @@ export const importMyData = (doc: VisionBucketExport) =>
     body: JSON.stringify(doc),
   }, true);
 
+// --- User statistics dashboard (Feature #7) --------------------------------
+
+export interface UserStats {
+  totals: {
+    moviesWatched: number;
+    reviews: number;
+    diaryEntries: number;
+    averageRating: number | null;
+  };
+  ratingsDistribution: Array<{ rating: number; count: number }>;
+  topGenres: Array<{ genre: string; count: number }>;
+  watchesPerYear: Array<{ year: number; count: number }>;
+  genresAvailable: boolean;
+}
+
+// Public: aggregated stats for a user (watch history, diary, reviews).
+export const getUserStats = (uid: string) =>
+  request<UserStats>(`/profile/stats/${encodeURIComponent(uid)}`);
+
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 
 export const getThreads = async (name: 'Discussions' | 'News') => {

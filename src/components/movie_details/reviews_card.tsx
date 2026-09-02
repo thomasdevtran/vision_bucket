@@ -2,6 +2,7 @@ import React from 'react';
 import '../../styles/MovieDetails.css';
 import ReactionButton from './ReactionButton';
 import SpoilerText from './SpoilerText';
+import ReportButton from '../report/ReportButton';
 
 interface ReviewCardProps {
   review: string;
@@ -47,6 +48,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         <button type="button" className="review-action">Reply</button>
         <button type="button" className="review-action">Share</button>
         <button type="button" className="review-action">Save</button>
+        {reviewId && (
+          <ReportButton targetType="review" targetId={reviewId} className="review-action" />
+        )}
       </div>
     </article>
   );

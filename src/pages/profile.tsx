@@ -13,6 +13,8 @@ import Reviews from '../components/profile/review_display/MovieReviewCard';
 import FollowSection from '../components/follow/FollowSection';
 import { deleteReviewForUser, getDiary, getReviewsForUser } from '../functions/firebase_backend';
 import MyLists from '../components/profile/my_lists/MyLists';
+import StatsDashboard from '../components/profile/stats_dashboard/StatsDashboard';
+import DataSettings from '../components/profile/data_settings/DataSettings';
 
 interface Review {
   id: string;
@@ -125,6 +127,8 @@ function Profile() {
 
         {profileUid && <FollowSection targetUid={profileUid} />}
 
+        {profileUid && <StatsDashboard uid={profileUid} />}
+
         <div className="history-panel">
           {isOwnProfile && (
             <>
@@ -147,6 +151,7 @@ function Profile() {
               <MyLists />
               <TVShowHistory />
               <MovieHistory />
+              <DataSettings />
             </>
           )}
           <h2 className="profile-section-title">Reviews</h2>
