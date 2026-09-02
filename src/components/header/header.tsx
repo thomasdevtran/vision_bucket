@@ -6,6 +6,7 @@ import '../../styles/header.css';
 import userIcon from '../../assets/userIcon.png';
 import searchIcon from '../../assets/searchIcon.png';
 import VisionBucket from '../../assets/VisionBucket.png';
+import NotificationBell from '../notifications/NotificationBell';
 
 function Header() {
   const [email, setEmail] = useState('');
@@ -69,6 +70,7 @@ function Header() {
         <nav className="header-nav" aria-label="Main navigation">
           <Link to="/" className="header-nav-link">Home</Link>
           <Link to="/discussion" className="header-nav-link">Discussion</Link>
+          <Link to="/feed" className="header-nav-link">Feed</Link>
           <Link to="/profile" className="header-nav-link">Profile</Link>
         </nav>
 
@@ -83,6 +85,8 @@ function Header() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
+
+          <NotificationBell />
 
           <div className="account-menu">
             <button className="menu-toggle" type="button" onClick={toggleUserMenu}>

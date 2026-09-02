@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import VisionBucket from '../../assets/VisionBucket.png';
 import Facebook from '../../assets/facebook.png';
 import Instagram from '../../assets/instagram.png';
@@ -12,12 +13,12 @@ const Footer = () => {
           <img src={VisionBucket} alt="Vision Bucket" />
           <p>Track what you watch, rate what matters, and talk about it with other movie fans.</p>
         </div>
-        
+
         <div className="footer-links">
-          <a href="/about">About</a>
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/terms">Terms of Service</a>
-          <a href="/contact">Contact</a>
+          <Link to="/">Home</Link>
+          <Link to="/discussion">Discussions</Link>
+          <Link to="/reviews">Reviews</Link>
+          <Link to="/profile">Profile</Link>
         </div>
         
         <div className="footer-social">

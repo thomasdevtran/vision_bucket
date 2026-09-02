@@ -1,0 +1,331 @@
+.list-detail-main,
+.profile-lists {
+  width: min(900px, calc(100% - 2rem));
+  margin: 0 auto 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  text-align: left;
+}
+
+.list-detail-header,
+.list-items-card,
+.list-collaborators-card,
+.profile-lists-card {
+  background: linear-gradient(180deg, rgba(20, 30, 44, 0.95) 0%, rgba(12, 18, 26, 0.98) 100%);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+}
+
+.list-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list-detail-heading h1 {
+  margin: 8px 0 6px;
+}
+
+.list-description {
+  color: var(--text-secondary);
+  margin: 0 0 6px;
+}
+
+.list-meta {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.list-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.list-badge.is-public {
+  background: rgba(57, 208, 199, 0.18);
+  color: var(--accent);
+}
+
+.list-badge.is-private {
+  background: rgba(246, 193, 119, 0.18);
+  color: var(--highlight);
+}
+
+.list-owner-controls {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.list-button {
+  background: var(--accent);
+  color: #04252a;
+  border: none;
+  border-radius: 12px;
+  padding: 9px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.list-button:hover {
+  background: var(--accent-strong);
+}
+
+.list-button.danger {
+  background: var(--danger);
+  color: #3a0d0d;
+}
+
+.list-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.list-items {
+  list-style: none;
+  margin: 12px 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: rgba(18, 26, 37, 0.6);
+}
+
+.list-item-position {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 24px;
+}
+
+.list-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.list-item-title:hover {
+  color: var(--accent);
+}
+
+.list-item-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
+.list-item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.list-move {
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.list-move:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.list-remove {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(255, 138, 138, 0.5);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.list-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.list-add-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-add-form input {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 9px 12px;
+}
+
+.list-add-form input[type='number'] {
+  width: 120px;
+}
+
+.list-add-form input[type='text'] {
+  flex: 1;
+  min-width: 160px;
+}
+
+.list-collaborators {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-collaborators li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+}
+
+.collaborator-uid {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.list-empty,
+.list-loading,
+.list-error {
+  color: var(--text-secondary);
+}
+
+.list-error {
+  color: var(--danger);
+}
+
+.list-message {
+  color: var(--accent);
+  margin: 0;
+}
+
+/* Profile "My Lists" section */
+.profile-lists-card {
+  margin-top: 4px;
+}
+
+.profile-lists-card h2 {
+  margin-top: 0;
+}
+
+.profile-lists-grid {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: rgba(18, 26, 37, 0.6);
+}
+
+.profile-list-row a {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.profile-list-row a:hover {
+  color: var(--accent);
+}
+
+.profile-list-row .profile-list-meta {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.profile-create-list-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.profile-create-list-form input {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.profile-create-list-form label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Add-to-list control on movie details */
+.movie-add-to-list {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.movie-add-to-list select {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  min-width: 180px;
+}
+
+.movie-add-to-list .list-message {
+  flex-basis: 100%;
+}

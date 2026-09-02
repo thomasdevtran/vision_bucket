@@ -277,6 +277,24 @@
   transform: none;
 }
 
+a.movie-list-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.tracking-fields label.diary-rewatch-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  align-self: end;
+}
+
+.diary-rewatch-field input {
+  width: auto;
+}
+
 .composer-card,
 .reviews-section {
   padding: 22px;
@@ -548,4 +566,81 @@
   .tracking-fields {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- Review reactions & spoiler controls (Feature #6) --- */
+.reaction-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reaction-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.reaction-button.is-active {
+  background: rgba(122, 162, 255, 0.22);
+  color: #eef2ff;
+  border: 1px solid rgba(122, 162, 255, 0.5);
+}
+
+.reaction-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.reaction-count {
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 0.85rem;
+}
+
+.reaction-message {
+  color: #9ea6bb;
+  font-size: 0.85rem;
+}
+
+.spoiler-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.spoiler-warning {
+  color: #aeb7cb;
+  font-size: 0.95rem;
+}
+
+.spoiler-reveal {
+  cursor: pointer;
+}
+
+.review-form-spoiler {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #c7cede;
+  font-size: 0.95rem;
+}
+
+.review-form-spoiler input {
+  accent-color: #7aa2ff;
+  width: 16px;
+  height: 16px;
+}
+
+.profile-review-reactions {
+  margin-top: 12px;
 }

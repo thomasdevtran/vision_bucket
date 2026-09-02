@@ -1,6 +1,6 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { API_BASE_URL } from '../config';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
+import type { Movie } from './api_service';
 
 export class ApiError extends Error {
   status: number;
@@ -47,6 +47,22 @@ const request = async <T,>(path: string, options: RequestInit = {}, authenticate
     throw new ApiError('Please sign in to continue.', 401, { code: 'authentication_required' });
   }
 
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+  return readResponse<T>(response);
+};
+
+// Like `request`, but the bearer token is optional: it is attached when the
+// user is signed in (so the backend can compute reactedByMe) and omitted
+// otherwise. Never throws for missing auth — used by public review reads.
+const requestMaybeAuth = async <T,>(path: string, options: RequestInit = {}): Promise<T> => {
+  const token = (await auth.currentUser?.getIdToken().catch(() => null)) ?? null;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
@@ -120,6 +136,36 @@ export interface WatchEntryInput {
   notes?: string;
 }
 
+export interface DiaryEntry {
+  id: string;
+  userId: string;
+  movieId: number;
+  watchedAt: string;
+  rating: number | null;
+  notes: string | null;
+  rewatch: boolean;
+  createdAt: string;
+}
+
+export interface DiaryEntryInput {
+  movieId: number;
+  watchedAt: string;
+  rating?: number;
+  notes?: string;
+  rewatch?: boolean;
+}
+
+export interface DiaryUpdateInput {
+  watchedAt?: string;
+  rating?: number | null;
+  notes?: string;
+}
+
+export interface DiaryPage {
+  entries: DiaryEntry[];
+  nextCursor: string | null;
+}
+
 export interface AppReview {
   id: string;
   movieId: number;
@@ -128,6 +174,15 @@ export interface AppReview {
   rating: number;
   uid?: string;
   date: string;
+  reactionCount: number;
+  reactedByMe?: boolean;
+  isSpoiler?: boolean;
+}
+
+export interface ReactionResult {
+  message: string;
+  reactionCount: number;
+  reactedByMe: boolean;
 }
 
 export interface AppComment {
@@ -148,6 +203,72 @@ export interface AppThread {
   Comments: AppComment[];
 }
 
+export type ReportTargetType = 'review' | 'thread' | 'comment';
+export type ReportStatus = 'open' | 'resolved' | 'dismissed';
+
+export interface Report {
+  id: string;
+  reporterUid: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  status: ReportStatus;
+  createdAt: string;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  resolution: string | null;
+}
+
+export interface ResolveReportInput {
+  status: 'resolved' | 'dismissed';
+  removeTarget?: boolean;
+}
+
+// Report a piece of content (auth). The reporter is always the token uid; the
+// server rejects a second open report on the same target with a 409.
+export const reportContent = (targetType: ReportTargetType, targetId: string, reason: string) =>
+  request<Report>('/reports', {
+    method: 'POST',
+    body: JSON.stringify({ targetType, targetId, reason }),
+  }, true);
+
+// Moderator/admin only: list reports for a status (defaults to open, newest-first).
+export const getReports = (status: ReportStatus = 'open') =>
+  request<{ status: ReportStatus; reports: Report[] }>(
+    `/reports?status=${encodeURIComponent(status)}`,
+    {},
+    true
+  );
+
+// Moderator/admin only: resolve or dismiss a report, optionally removing the
+// offending content. Returns the updated report plus whether it was removed.
+export const resolveReport = (id: string, input: ResolveReportInput) =>
+  request<Report & { removedTarget: boolean }>(
+    `/reports/${encodeURIComponent(id)}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+    true
+  );
+
+export type NotificationType = 'follow' | 'reaction' | 'comment';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  actorUid: string;
+  actorName: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsPage {
+  notifications: AppNotification[];
+  unreadCount: number;
+  nextCursor: string | null;
+}
 const DEFAULT_PROFILE = (username: string, timestamp: string): UserProfile => ({
   Username: username,
   username,
@@ -203,6 +324,22 @@ export const updateLastOnline = async (_uid?: string) => {
 export const getWatchEntries = (uid: string) =>
   request<WatchEntry[]>(`/profile/watch_entries/${encodeURIComponent(uid)}`);
 
+export interface RecommendationsResponse {
+  results: Movie[];
+  fallback: boolean;
+  reason?: string;
+  preferredGenres?: string[];
+}
+
+// Personalized "For You" feed for the signed-in user. Returns ranked movies in
+// the shared Movie shape; a 503 movie_provider_not_configured surfaces as an
+// ApiError the caller can message with getErrorMessage.
+export const getRecommendations = async (limit?: number): Promise<Movie[]> => {
+  const suffix = typeof limit === 'number' ? `?limit=${encodeURIComponent(limit)}` : '';
+  const data = await request<RecommendationsResponse>(`/recommendations${suffix}`, {}, true);
+  return data.results;
+};
+
 export const saveWatchEntry = async (_uid: string, movieId: number, input: WatchEntryInput) => {
   const { entry } = await request<{ message: string; entry: WatchEntry }>(
     `/profile/update/${input.status}/add_movie`,
@@ -219,6 +356,33 @@ export const removeWatchEntry = async (_uid: string, movieId: number, status: Wa
   }, true);
 };
 
+// --- Viewing diary (append-only watch log, rewatches allowed) ---------------
+
+export const logDiaryEntry = (input: DiaryEntryInput) =>
+  request<DiaryEntry>('/profile/diary', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }, true);
+
+export const getDiary = (uid: string, options: { cursor?: string | null; limit?: number } = {}) => {
+  const params = new URLSearchParams();
+  if (options.cursor) params.set('cursor', options.cursor);
+  if (options.limit) params.set('limit', String(options.limit));
+  const suffix = params.toString() ? `?${params.toString()}` : '';
+  return request<DiaryPage>(`/profile/diary/${encodeURIComponent(uid)}${suffix}`);
+};
+
+export const updateDiaryEntry = (entryId: string, update: DiaryUpdateInput) =>
+  request<DiaryEntry>(`/profile/diary/${encodeURIComponent(entryId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  }, true);
+
+export const deleteDiaryEntry = (entryId: string) =>
+  request<{ message: string }>(`/profile/diary/${encodeURIComponent(entryId)}`, {
+    method: 'DELETE',
+  }, true);
+
 export const addMovieToUserList = (_uid: string, movieId: number) =>
   saveWatchEntry(_uid, movieId, { status: 'Plan_to_watch' });
 
@@ -234,7 +398,16 @@ export const setMovieStatus = (_uid: string, movieId: number, status: string) =>
   return saveWatchEntry(_uid, movieId, { status: status as WatchStatus });
 };
 
-export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
+export interface CreateReviewInput {
+  movieId: number;
+  Author: string;
+  content: string;
+  rating: number;
+  uid?: string;
+  isSpoiler?: boolean;
+}
+
+export const createReview = async (payload: CreateReviewInput) => {
   const result = await request<{ id: string; review: Omit<AppReview, 'id' | 'uid'> }>('/reviews/posting', {
     method: 'POST',
     body: JSON.stringify({
@@ -242,6 +415,7 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
       Author: payload.Author,
       content: payload.content,
       rating: payload.rating,
+      isSpoiler: payload.isSpoiler ?? false,
     }),
   }, true);
 
@@ -252,21 +426,24 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
   return { id: result.id, ...result.review, uid: auth.currentUser?.uid } as AppReview;
 };
 
-const reviewsCollection = collection(db, 'Reviews');
+// Public reads go through the backend so reactionCount/isSpoiler are included
+// and reactedByMe is resolved from the caller's token when signed in.
+export const getReviewsForMovie = (movieId: number) =>
+  requestMaybeAuth<AppReview[]>(`/reviews/movie/${movieId}`);
 
-export const getReviewsForMovie = async (movieId: number) => {
-  const snapshot = await getDocs(query(reviewsCollection, where('movieId', '==', movieId)));
-  return sortByDateDesc(snapshot.docs.map((reviewDoc) => ({
-    id: reviewDoc.id,
-    ...(reviewDoc.data() as Omit<AppReview, 'id'>),
-  })));
-};
+export const getReviewById = (reviewId: string) =>
+  requestMaybeAuth<AppReview>(`/reviews/${encodeURIComponent(reviewId)}`);
 
-export const getReviewById = async (reviewId: string) => {
-  const snapshot = await getDoc(doc(db, 'Reviews', reviewId));
-  if (!snapshot.exists()) throw new ApiError('Review not found', 404, { code: 'not_found' });
-  return { id: snapshot.id, ...(snapshot.data() as Omit<AppReview, 'id'>) };
-};
+export const reactToReview = (reviewId: string, type: string = 'helpful') =>
+  request<ReactionResult>(`/reviews/${encodeURIComponent(reviewId)}/reactions`, {
+    method: 'POST',
+    body: JSON.stringify({ type }),
+  }, true);
+
+export const unreactToReview = (reviewId: string) =>
+  request<ReactionResult>(`/reviews/${encodeURIComponent(reviewId)}/reactions`, {
+    method: 'DELETE',
+  }, true);
 
 export const getReviewsForUser = async (uid: string) => {
   const profile = await getUserProfile(uid);
@@ -282,12 +459,227 @@ export const deleteReviewForUser = async (reviewId: string, _uid?: string) => {
   }, true);
 };
 
-export const updateReview = async (reviewId: string, update: { content: string; rating: number }) => {
+export const updateReview = async (
+  reviewId: string,
+  update: { content?: string; rating?: number; isSpoiler?: boolean }
+) => {
   await request<{ message: string }>(`/reviews/${encodeURIComponent(reviewId)}`, {
     method: 'PATCH',
     body: JSON.stringify(update),
   }, true);
 };
+
+export interface FollowCounts {
+  uid: string;
+  followers: number;
+  following: number;
+}
+
+export interface FeedItem {
+  id: string;
+  type: 'review' | 'watch';
+  actorUid: string;
+  actorName: string | null;
+  timestamp: string | null;
+  movieId: number | string;
+  content?: string;
+  rating?: number;
+  status?: string;
+  refId: string;
+}
+
+export interface FeedPage {
+  items: FeedItem[];
+  nextCursor: string | null;
+}
+
+export const followUser = (followeeId: string) =>
+  request<{ message: string }>('/follows', {
+    method: 'POST',
+    body: JSON.stringify({ followeeId }),
+  }, true);
+
+export const unfollowUser = (followeeId: string) =>
+  request<{ message: string }>(`/follows/${encodeURIComponent(followeeId)}`, {
+    method: 'DELETE',
+  }, true);
+
+export const getFollowCounts = async (uid: string): Promise<FollowCounts> => {
+  const [followers, following] = await Promise.all([
+    request<{ count: number }>(`/follows/followers/${encodeURIComponent(uid)}`),
+    request<{ count: number }>(`/follows/following/${encodeURIComponent(uid)}`),
+  ]);
+  return { uid, followers: followers.count, following: following.count };
+};
+
+export const getFollowStatus = async (uid: string): Promise<boolean> => {
+  const result = await request<{ following: boolean }>(
+    `/follows/status/${encodeURIComponent(uid)}`,
+    {},
+    true
+  );
+  return result.following;
+};
+
+export const getFeed = (options: { cursor?: string | null; limit?: number } = {}) => {
+  const params = new URLSearchParams();
+  if (options.cursor) params.set('cursor', options.cursor);
+  if (options.limit) params.set('limit', String(options.limit));
+  const queryString = params.toString();
+  return request<FeedPage>(`/feed${queryString ? `?${queryString}` : ''}`, {}, true);
+};
+
+export interface MovieListItem {
+  movieId: number;
+  position: number;
+  note?: string;
+}
+
+export interface MovieList {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  isPublic: boolean;
+  collaboratorIds: string[];
+  items: MovieListItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MovieListInput {
+  title: string;
+  description?: string;
+  isPublic?: boolean;
+}
+
+export interface MovieListUpdate {
+  title?: string;
+  description?: string;
+  isPublic?: boolean;
+}
+
+// Send the caller's token when signed in so owners/collaborators can see their
+// private lists, but still allow anonymous reads of public lists.
+const authedWhenSignedIn = () => !!auth.currentUser;
+
+export const createList = (input: MovieListInput) =>
+  request<MovieList>('/lists', { method: 'POST', body: JSON.stringify(input) }, true);
+
+export const getList = (id: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}`, {}, authedWhenSignedIn());
+
+export const getUserLists = (uid: string) =>
+  request<MovieList[]>(`/lists/user/${encodeURIComponent(uid)}`, {}, authedWhenSignedIn());
+
+export const updateList = (id: string, update: MovieListUpdate) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  }, true);
+
+export const deleteList = (id: string) =>
+  request<{ message: string }>(`/lists/${encodeURIComponent(id)}`, { method: 'DELETE' }, true);
+
+export const addListItem = (id: string, movieId: number, note?: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { movieId, note } : { movieId }),
+  }, true);
+
+export const reorderListItems = (id: string, order: number[]) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items`, {
+    method: 'PATCH',
+    body: JSON.stringify({ order }),
+  }, true);
+
+export const removeListItem = (id: string, movieId: number) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/items/${encodeURIComponent(String(movieId))}`, {
+    method: 'DELETE',
+  }, true);
+
+export const addCollaborator = (id: string, uid: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/collaborators`, {
+    method: 'POST',
+    body: JSON.stringify({ uid }),
+  }, true);
+
+export const removeCollaborator = (id: string, uid: string) =>
+  request<MovieList>(`/lists/${encodeURIComponent(id)}/collaborators/${encodeURIComponent(uid)}`, {
+    method: 'DELETE',
+  }, true);
+
+// Notifications -------------------------------------------------------------
+// The recipient is always the authenticated caller (derived from the token
+// server-side), so these never take a uid.
+
+export const getNotifications = (cursor?: string) =>
+  request<NotificationsPage>(
+    `/notifications${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+    {},
+    true
+  );
+
+export const markNotificationRead = (id: string) =>
+  request<AppNotification>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'POST' }, true);
+
+export const markAllNotificationsRead = () =>
+  request<{ message: string; updated: number }>('/notifications/read-all', { method: 'POST' }, true);
+
+// --- Import / export (Feature #10) -----------------------------------------
+
+export interface VisionBucketExport {
+  version: number;
+  exportedAt: string;
+  profile: Record<string, unknown> | null;
+  watchEntries: WatchEntry[];
+  diary: Array<Record<string, unknown>>;
+  reviews: Array<Record<string, unknown>>;
+  lists: Array<Record<string, unknown>>;
+}
+
+export interface ImportCounts {
+  watchEntries: number;
+  diary: number;
+  reviews: number;
+  lists: number;
+}
+
+export interface ImportSummary {
+  imported: ImportCounts;
+  skipped: ImportCounts;
+}
+
+// Download the signed-in user's full data document (their own data only).
+export const exportMyData = () =>
+  request<VisionBucketExport>('/profile/export', {}, true);
+
+// Recreate the signed-in user's entries from an export document. The server
+// ignores any ids in the file and dedupes, so re-importing is safe.
+export const importMyData = (doc: VisionBucketExport) =>
+  request<ImportSummary>('/profile/import', {
+    method: 'POST',
+    body: JSON.stringify(doc),
+  }, true);
+
+// --- User statistics dashboard (Feature #7) --------------------------------
+
+export interface UserStats {
+  totals: {
+    moviesWatched: number;
+    reviews: number;
+    diaryEntries: number;
+    averageRating: number | null;
+  };
+  ratingsDistribution: Array<{ rating: number; count: number }>;
+  topGenres: Array<{ genre: string; count: number }>;
+  watchesPerYear: Array<{ year: number; count: number }>;
+  genresAvailable: boolean;
+}
+
+// Public: aggregated stats for a user (watch history, diary, reviews).
+export const getUserStats = (uid: string) =>
+  request<UserStats>(`/profile/stats/${encodeURIComponent(uid)}`);
 
 const routeFor = (name: 'Discussions' | 'News') => name === 'Discussions' ? 'discussions' : 'news';
 

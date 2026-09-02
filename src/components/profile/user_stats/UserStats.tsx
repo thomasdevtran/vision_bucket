@@ -13,11 +13,33 @@ interface UserData {
     reviews: string[];
 }
 
-function UserStats() {
+interface UserStatsProps {
+    uid?: string;
+}
+
+function UserStats({ uid }: UserStatsProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // When a uid is supplied we render that user's public profile card;
+        // otherwise fall back to the signed-in user (and refresh last-online).
+        if (uid) {
+            let active = true;
+            setLoading(true);
+            getUserProfile(uid)
+                .then((data) => {
+                    if (active) setUserData(data);
+                })
+                .catch((error) => console.error('Error fetching user data:', error))
+                .finally(() => {
+                    if (active) setLoading(false);
+                });
+            return () => {
+                active = false;
+            };
+        }
+
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -36,7 +58,7 @@ function UserStats() {
             }
         });
         return () => unsubscribe();
-    }, []);
+    }, [uid]);
 
     if (loading) {
         return <div>Loading...</div>;

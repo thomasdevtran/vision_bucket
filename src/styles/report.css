@@ -1,0 +1,126 @@
+.report-button {
+  background: transparent;
+  border: 1px solid rgba(86, 108, 140, 0.5);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.report-button:hover {
+  border-color: rgba(224, 108, 108, 0.7);
+  color: #f0a0a0;
+}
+
+.report-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 11, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.report-dialog {
+  width: min(440px, 100%);
+  background: linear-gradient(155deg, rgba(20, 30, 44, 0.98) 0%, rgba(12, 18, 26, 0.99) 100%);
+  border: 1px solid rgba(86, 108, 140, 0.5);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 1.4rem;
+  text-align: left;
+}
+
+.report-dialog-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.report-dialog-note {
+  margin: 0 0 0.8rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.report-dialog-success {
+  color: var(--accent);
+}
+
+.report-dialog-error {
+  color: #f0a0a0;
+}
+
+.report-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(12, 18, 26, 0.92);
+  border: 1px solid rgba(86, 108, 140, 0.5);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 0.8rem;
+}
+
+.report-dialog-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.report-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.report-primary,
+.report-secondary {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.report-primary {
+  background: var(--accent-strong);
+  color: #04120f;
+  font-weight: 700;
+}
+
+.report-primary:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.report-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.report-secondary {
+  background: transparent;
+  border-color: rgba(86, 108, 140, 0.5);
+  color: var(--text-secondary);
+}
+
+.report-secondary:hover {
+  color: var(--text-primary);
+}
+
+.report-inline-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+}

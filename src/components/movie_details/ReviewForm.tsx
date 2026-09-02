@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
 interface ReviewFormProps {
-  onSubmit: (reviewText: string, rating: number) => void | Promise<void>;
+  onSubmit: (reviewText: string, rating: number, isSpoiler: boolean) => void | Promise<void>;
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
   const [reviewText, setReviewText] = useState('');
   const [rating, setRating] = useState<number>(0);
+  const [isSpoiler, setIsSpoiler] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,9 +24,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
     setSubmitting(true);
     setError('');
     try {
-      await onSubmit(reviewText.trim(), rating);
+      await onSubmit(reviewText.trim(), rating, isSpoiler);
       setReviewText('');
       setRating(0);
+      setIsSpoiler(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to post your review.');
     } finally {
@@ -59,6 +61,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
           {submitting ? 'Posting…' : 'Post Review'}
         </button>
       </div>
+      <label className="review-form-spoiler">
+        <input
+          type="checkbox"
+          checked={isSpoiler}
+          onChange={(e) => setIsSpoiler(e.target.checked)}
+        />
+        Contains spoilers
+      </label>
       {error && <p className="review-form-error" role="alert">{error}</p>}
     </div>
   );
