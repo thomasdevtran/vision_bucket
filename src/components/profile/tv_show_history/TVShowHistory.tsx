@@ -1,3 +1,4 @@
+import { posterUrl } from '../../../functions/poster';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/profile.css';
@@ -9,7 +10,7 @@ function MovieHistory() {
     const navigate = useNavigate(); // Hook for navigation
 
     // Example watched movie IDs. Replace these with actual IDs from your database or API.
-    const watchedMovieIds = JSON.parse(localStorage.getItem('shows') || '[]');// Replace with actual movie IDs
+    const [watchedMovieIds] = useState<number[]>(() => JSON.parse(localStorage.getItem('shows') || '[]'));// Replace with actual movie IDs
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -27,7 +28,7 @@ function MovieHistory() {
         };
 
         fetchMovies();
-    }, []);
+    }, [watchedMovieIds]);
 
     const handleCardClick = (id: number) => {
         navigate(`/show/${id}`); // Navigate to the movie details page
@@ -53,7 +54,7 @@ function MovieHistory() {
                         }}
                     >
                         <img
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                            src={posterUrl(movie.poster_path)}
                             alt={movie.title}
                             className="history-poster"
                         />

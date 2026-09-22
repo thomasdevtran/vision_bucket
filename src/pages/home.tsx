@@ -1,6 +1,8 @@
+import { DEMO_MODE } from '../config';
+import { posterUrl } from '../functions/poster';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from '../functions/session';
 import { getMoviesByGenre, Movie } from '../functions/api_service';
 import '../App.css';
 import Header from '../components/header/header';
@@ -50,11 +52,8 @@ function Home() {
     const fetchMovies = async () => {
       try {
         // Get action movies by genre ID
-        const actionResponse = await getMoviesByGenre(ACTION_GENRE_ID);
+        const [actionResponse, comedyResponse] = await Promise.all([getMoviesByGenre(ACTION_GENRE_ID), getMoviesByGenre(COMEDY_GENRE_ID)]);
         setActionMovies(actionResponse.results);
-        
-        // Get comedy movies by genre ID
-        const comedyResponse = await getMoviesByGenre(COMEDY_GENRE_ID);
         setComedyMovies(comedyResponse.results);
       } catch (err) {
         setError('Failed to fetch movies');
@@ -153,7 +152,7 @@ function Home() {
             Explore curated shelves, save films to your lists, and keep your ratings and reviews in one
             polished space.
           </p>
-          <p className="carousel-meta">{isLoggedIn ? 'Signed in and synced to your account.' : 'Browsing as a guest.'}</p>
+          <p className="carousel-meta">{isLoggedIn ? (DEMO_MODE ? 'Your own screening room. Changes are saved in this browser.' : 'Signed in and synced to your account.') : 'Browsing as a guest.'}</p>
         </section>
 
         <div className="movies-container">
@@ -194,13 +193,16 @@ function Home() {
                 <div
                   key={movie.id}
                   className="movie-card"
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={event => { if (event.key === "Enter") handleCardClick(movie.id); }}
                   style={{ '--stagger': index } as React.CSSProperties}
                   onClick={() => {
                     handleCardClick(movie.id);
                   }}
                 >
                   <img
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                    src={posterUrl(movie.poster_path)}
                     alt={movie.title}
                   />
                   <div className="movie-info">
@@ -251,13 +253,16 @@ function Home() {
                 <div
                   key={movie.id}
                   className="movie-card"
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={event => { if (event.key === "Enter") handleCardClick(movie.id); }}
                   style={{ '--stagger': index } as React.CSSProperties}
                   onClick={() => {
                     handleCardClick(movie.id);
                   }}
                 >
                   <img
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                    src={posterUrl(movie.poster_path)}
                     alt={movie.title}
                   />
                   <div className="movie-info">

@@ -36,6 +36,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
   return (
     <div className="review-form">
       <textarea
+        aria-label="Your review"
+        maxLength={5000}
         className="review-form-textarea"
         placeholder="What did you think?"
         value={reviewText}
@@ -44,6 +46,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
       />
       <div className="review-form-row">
         <select
+          aria-label="Review rating"
           className="review-form-rating"
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}

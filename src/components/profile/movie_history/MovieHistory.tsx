@@ -1,8 +1,9 @@
+import { posterUrl } from '../../../functions/poster';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/profile.css';
 import { getMovieDetails, Movie } from '../../../functions/api_service';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from '../../../functions/session';
 import { getWatchEntries, WatchEntry } from '../../../functions/firebase_backend';
 
 interface TrackedMovie {
@@ -70,7 +71,7 @@ function MovieHistory() {
                             }}
                         >
                             <img
-                                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                                src={posterUrl(movie.poster_path)}
                                 alt={movie.title}
                                 className="history-poster"
                             />

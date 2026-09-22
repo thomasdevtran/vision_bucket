@@ -1,46 +1,33 @@
-# Getting Started with Create React App
+# Vision Bucket
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[Open the public portfolio demo](https://vision-bucket-portfolio-demo.trollthomas5.chatgpt.site) — no sign-in required.
 
-## Available Scripts
+A React + TypeScript movie-tracking and community app, paired with the Express/Firebase [backend](https://github.com/thomasdevtran/vision_bucket_backend).
 
-In the project directory, you can run:
+## Portfolio demo — no sign-in or backend required
 
-### `npm start`
+Use Node.js 22+.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```sh
+npm ci
+npm run demo
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+For a static build:
 
-### `npm test`
+```sh
+npm run build:demo
+npm run preview:demo
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Open http://127.0.0.1:4173 after starting the preview. The demo includes twelve fictional films, locally bundled artwork, watch tracking, editable reviews, profile statistics, discussions, and reset. Each visitor's changes stay in their browser. See [DEMO.md](DEMO.md) for hosting, a walkthrough, and suggested portfolio copy.
 
-### `npm run build`
+## Live integration
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Copy .env.example to .env and supply your Firebase web app configuration and API URL. Run the backend with its own Firebase Admin credentials and optional TMDB access token, then use `npm start`. Normal builds use the real API unless REACT_APP_DEMO_MODE=true is explicitly set. Review reads use the API, not direct Firestore access. Never place backend service-account credentials in the frontend.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Verification
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`npm test -- --watchAll=false` runs the frontend tests. `npm run build:demo` produces the static portfolio build. See the backend README for its unit and Firebase emulator integration suites.
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Vision Bucket began as a university team project. Describe individual contributions separately from the original team work when presenting it.

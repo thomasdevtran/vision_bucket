@@ -1,3 +1,4 @@
+import { DEMO_MODE } from '../config';
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
@@ -13,12 +14,12 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-export const app = initializeApp(firebaseConfig);
+export const app = initializeApp(DEMO_MODE ? { apiKey: 'demo-key', projectId: 'demo-vision-bucket', appId: 'demo-app' } : firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-void isSupported().then((supported) => {
+if (!DEMO_MODE) void isSupported().then((supported) => {
   if (supported) {
     getAnalytics(app);
   }
-});
+}).catch(() => { /* Analytics must not prevent the app from loading. */ });

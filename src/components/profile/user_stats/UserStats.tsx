@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../../../styles/profile.css';
 import user_icon from '../../../assets/user_high.png';
-import mail_icon from '../../../assets/mail_high.png';
-import friend_request_icon from '../../../assets/friend_high.png';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from '../../../functions/session';
 import { getUserProfile, updateLastOnline } from '../../../functions/firebase_backend';
 
 interface UserData {
@@ -55,8 +53,6 @@ function UserStats() {
             <img src={user_icon} alt="User Icon" className="profile-picture" />
             <br />
             <h2>{userData?.username || 'Guest'}</h2>
-            <img src={mail_icon} alt="Mail Icon" className="profile-image" />
-            <img src={friend_request_icon} alt="Friend Request Icon" className="profile-image" />
             <br />
             <p>
                 Last Online: {userData?.Last_online ? formatDate(userData.Last_online) : 'N/A'}
@@ -65,10 +61,6 @@ function UserStats() {
                 <br />
                 <br />
                 Reviews: {userData?.reviews?.length || 0}
-                <br />
-                Favorites: temp
-                <br />
-                Recommendations: temp
             </p>
         </div>
     );

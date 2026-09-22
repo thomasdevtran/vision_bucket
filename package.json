@@ -23,7 +23,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "demo": "node scripts/demo.cjs start",
+    "build:demo": "node scripts/demo.cjs build",
+    "preview:demo": "node scripts/preview-demo.cjs"
   },
   "eslintConfig": {
     "extends": [

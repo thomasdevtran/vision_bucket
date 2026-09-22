@@ -1,5 +1,6 @@
+import { DEMO_MODE } from '../../config';
 import React, { useState, useEffect } from 'react';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut } from '../../functions/session';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../App.css';
 import '../../styles/header.css';
@@ -69,6 +70,7 @@ function Header() {
         <nav className="header-nav" aria-label="Main navigation">
           <Link to="/" className="header-nav-link">Home</Link>
           <Link to="/discussion" className="header-nav-link">Discussion</Link>
+          <Link to="/reviews" className="header-nav-link">Reviews</Link>
           <Link to="/profile" className="header-nav-link">Profile</Link>
         </nav>
 
@@ -77,7 +79,8 @@ function Header() {
             <img src={searchIcon} alt="Search" className="search-icon" />
             <input
               type="text"
-              placeholder="Search movies, directors, or titles"
+              placeholder="Search movie titles"
+              aria-label="Search movie titles"
               className="search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -85,7 +88,7 @@ function Header() {
           </form>
 
           <div className="account-menu">
-            <button className="menu-toggle" type="button" onClick={toggleUserMenu}>
+            <button className="menu-toggle" type="button" onClick={toggleUserMenu} aria-expanded={showUserMenu} aria-label="Account menu">
               <span className="menu-avatar">
                 <img src={userIcon} alt="User menu" className="menu-avatar-icon" />
               </span>
@@ -103,7 +106,7 @@ function Header() {
                 <button onClick={handeldiscussion} className="option-button">
                   Discussion
                 </button>
-                {email && (
+                {email && !DEMO_MODE && (
                   <button onClick={handleSignOut} className="sign-out-button">
                     Sign Out
                   </button>

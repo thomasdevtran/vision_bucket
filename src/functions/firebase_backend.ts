@@ -1,6 +1,7 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { API_BASE_URL } from '../config';
-import { auth, db } from './firebase';
+import { API_BASE_URL, DEMO_MODE } from '../config';
+import { getAuth } from './session';
+import { demoRequest } from '../demo/store';
+const auth = getAuth();
 
 export class ApiError extends Error {
   status: number;
@@ -41,8 +42,9 @@ const readResponse = async <T,>(response: Response): Promise<T> => {
   });
 };
 
-const request = async <T,>(path: string, options: RequestInit = {}, authenticated = false): Promise<T> => {
-  const token = authenticated ? await auth.currentUser?.getIdToken() : null;
+const request = async <T,>(path: string, options: RequestInit = {}, authenticated = false, identify = false): Promise<T> => {
+  if (DEMO_MODE) return demoRequest<T>(path, options);
+  const token = authenticated || identify ? await auth.currentUser?.getIdToken() : null;
   if (authenticated && !token) {
     throw new ApiError('Please sign in to continue.', 401, { code: 'authentication_required' });
   }
@@ -63,6 +65,7 @@ export const authFetch = async (
   options: RequestInit = {},
   getToken: () => Promise<string | null> = () => auth.currentUser?.getIdToken() ?? Promise.resolve(null)
 ): Promise<Response> => {
+  if (DEMO_MODE) return new Response(JSON.stringify(await demoRequest(path, options)), { status: 200, headers: { 'Content-Type': 'application/json' } });
   const token = await getToken();
   if (!token) throw new ApiError('Please sign in to continue.', 401, { code: 'authentication_required' });
   return fetch(`${API_BASE_URL}${path}`, {
@@ -127,6 +130,7 @@ export interface AppReview {
   content: string;
   rating: number;
   uid?: string;
+  isOwner?: boolean;
   date: string;
 }
 
@@ -252,21 +256,11 @@ export const createReview = async (payload: Omit<AppReview, 'id' | 'date'>) => {
   return { id: result.id, ...result.review, uid: auth.currentUser?.uid } as AppReview;
 };
 
-const reviewsCollection = collection(db, 'Reviews');
+export const getReviewsForMovie = async (movieId: number) =>
+  sortByDateDesc(await request<AppReview[]>(`/reviews/movie/${movieId}`, {}, false, true));
 
-export const getReviewsForMovie = async (movieId: number) => {
-  const snapshot = await getDocs(query(reviewsCollection, where('movieId', '==', movieId)));
-  return sortByDateDesc(snapshot.docs.map((reviewDoc) => ({
-    id: reviewDoc.id,
-    ...(reviewDoc.data() as Omit<AppReview, 'id'>),
-  })));
-};
-
-export const getReviewById = async (reviewId: string) => {
-  const snapshot = await getDoc(doc(db, 'Reviews', reviewId));
-  if (!snapshot.exists()) throw new ApiError('Review not found', 404, { code: 'not_found' });
-  return { id: snapshot.id, ...(snapshot.data() as Omit<AppReview, 'id'>) };
-};
+export const getReviewById = (reviewId: string) =>
+  request<AppReview>(`/reviews/${encodeURIComponent(reviewId)}`, {}, false, true);
 
 export const getReviewsForUser = async (uid: string) => {
   const profile = await getUserProfile(uid);

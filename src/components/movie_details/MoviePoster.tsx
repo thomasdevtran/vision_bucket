@@ -1,3 +1,4 @@
+import { posterUrl } from '../../functions/poster';
 import React from 'react';
 
 interface MoviePosterProps {
@@ -12,7 +13,7 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ posterPath, title, releaseDat
     <div className="movie-top-section">
       <div className="movie-poster">
         <img
-          src={`https://image.tmdb.org/t/p/w500${posterPath}`}
+          src={posterUrl(posterPath)}
           alt={title}
         />
       </div>

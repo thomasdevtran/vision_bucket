@@ -15,7 +15,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, author, rating, index =
         <div className="review-avatar">{index + 1}</div>
         <div className="review-meta">
           <span className="review-author">{author}</span>
-          <span className="review-time">just now</span>
         </div>
         <div className="review-score">
           <span className="review-score-label">Rating</span>
@@ -23,11 +22,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, author, rating, index =
         </div>
       </div>
       <p className="review-content">{review}</p>
-      <div className="review-actions-row">
-        <button type="button" className="review-action">Reply</button>
-        <button type="button" className="review-action">Share</button>
-        <button type="button" className="review-action">Save</button>
-      </div>
     </article>
   );
 };

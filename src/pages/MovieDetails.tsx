@@ -1,3 +1,4 @@
+import { DEMO_MODE } from '../config';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getMovieDetails, Movie } from '../functions/api_service';
@@ -8,7 +9,7 @@ import ReviewCard from '../components/movie_details/reviews_card';
 import MoviePoster from '../components/movie_details/MoviePoster';
 import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User } from '../functions/session';
 import blue_circle from '../assets/circles/blue_circle.png';
 import yellow_circle from '../assets/circles/yellow_circle.png';
 import red_circle from '../assets/circles/red_circle.png';
@@ -40,6 +41,7 @@ interface FirestoreReview {
   content: string;
   rating: number;
   uid?: string;
+  isOwner?: boolean;
   date: string;
 }
 
@@ -92,6 +94,11 @@ function MovieDetails() {
             setNotes(entry.notes || '');
             setHasWatchEntry(true);
           } else {
+            setSelectedStatus('Plan_to_watch');
+            setWatchedAt('');
+            setPersonalRating('');
+            setProgress('');
+            setNotes('');
             setHasWatchEntry(false);
           }
         } catch (err) {
@@ -116,7 +123,7 @@ function MovieDetails() {
       }
     };
     fetchReviews();
-  }, [id]);
+  }, [id, user?.uid]);
 
   // Post a review
   const handleReviewSubmit = async (reviewText: string, rating: number) => {
@@ -132,7 +139,7 @@ function MovieDetails() {
         uid: user.uid,
       });
       setFirestoreReviews((prev) => [data, ...prev]);
-      alert('Review submitted successfully!');
+      setReviewActionError('');
     } catch (err) {
       console.error(err);
       throw new Error(getErrorMessage(err, 'Failed to submit review.'));
@@ -140,17 +147,17 @@ function MovieDetails() {
   };
 
   // Remove a review
-  const handleDeleteReview = async (reviewId: string, reviewUid?: string) => {
-    if (!user || user.uid !== reviewUid) {
+  const handleDeleteReview = async (reviewId: string, reviewUid?: string, isOwner?: boolean) => {
+    if (!user || !(isOwner || user.uid === reviewUid)) {
       alert('You can only delete your own reviews.');
       return;
     }
     try {
       await deleteReviewForUser(reviewId, user.uid);
       setFirestoreReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      alert('Review deleted successfully!');
+      setReviewActionError('');
     } catch (err) {
-      alert('Failed to delete review.');
+      setReviewActionError('Unable to delete the review. Please try again.');
       console.error(err);
     }
   };
@@ -234,7 +241,7 @@ function MovieDetails() {
   };
 
   if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>;
+    return <div><Header /><main className="page-main"><h1>Movie unavailable</h1><p role="alert">{error}</p><p>Use Home or search to choose another film.</p></main><Footer /></div>;
   }
 
   if (!movie) {
@@ -369,11 +376,13 @@ function MovieDetails() {
                     {editingReviewId === review.id ? (
                       <div className="review-edit-form">
                         <textarea
+                          aria-label="Edit review"
                           rows={4}
                           value={editingReviewText}
                           onChange={(event) => setEditingReviewText(event.target.value)}
                         />
                         <select
+                          aria-label="Edit rating"
                           value={editingReviewRating}
                           onChange={(event) => setEditingReviewRating(Number(event.target.value))}
                         >
@@ -392,11 +401,11 @@ function MovieDetails() {
                         index={index}
                       />
                     )}
-                    {user && user.uid === review.uid && editingReviewId !== review.id && (
+                    {user && (review.isOwner || user.uid === review.uid) && editingReviewId !== review.id && (
                       <div className="review-owner-actions">
                         <button onClick={() => startEditingReview(review)} className="review-action">Edit</button>
                         <button
-                          onClick={() => handleDeleteReview(review.id, review.uid)}
+                          onClick={() => handleDeleteReview(review.id, review.uid, review.isOwner)}
                           className="review-delete-button"
                         >
                           Delete
@@ -422,7 +431,7 @@ function MovieDetails() {
             <h3>Movie snapshot</h3>
             <p>
               {movie.title} is currently sitting at a {movie.vote_average.toFixed(1)}/10 average rating
-              on TMDB.
+              {DEMO_MODE ? ' in the sample catalog.' : ' on TMDB.'}
             </p>
           </div>
 

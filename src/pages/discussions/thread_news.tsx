@@ -4,7 +4,7 @@ import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
 import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/discussion/Commentform';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from '../../functions/session';
 import { addCommentToThread, getErrorMessage, getThreadById } from '../../functions/firebase_backend';
 
 function ThreadNewsDetails() {

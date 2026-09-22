@@ -1,6 +1,7 @@
+import { posterUrl } from '../functions/poster';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from '../functions/session';
 import { searchMovies, Movie } from '../functions/api_service';
 import '../App.css';
 import Header from '../components/header/header';
@@ -8,7 +9,6 @@ import Footer from '../components/footer/footer';
 
 
 function SearchResults() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [movies, setMovies] = useState<Movie[]>([]);
@@ -22,20 +22,19 @@ function SearchResults() {
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setIsLoggedIn(true);
-        } else {
+        if (!user) {
           navigate('/auth');
         }
         setLoading(false);
       });
   
       return () => unsubscribe();
-    }, [auth]);
+    }, [auth, navigate]);
     
     useEffect(() => {
       const fetchMovies = async () => {
         if (!query) return;
+        setError(null);
         try {
           const response = await searchMovies(query);
           setMovies(response.results);
@@ -66,6 +65,7 @@ function SearchResults() {
   
           <div className="movies-container">
             {error && <p className="error-text">{error}</p>}
+            {!error && movies.length === 0 && <p role="status">No movies match this search. Try another title, such as Orbit.</p>}
             <div className="movies-grid">
               {movies.map((movie) => (
                 <div 
@@ -75,9 +75,12 @@ function SearchResults() {
                     handleCardClick(movie.id);
                   }}
                   className="movie-card"
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={event => { if (event.key === "Enter") handleCardClick(movie.id); }}
                 >
                   <img 
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
+                    src={posterUrl(movie.poster_path)}
                     alt={movie.title}
                   />
                   <div className="movie-info">

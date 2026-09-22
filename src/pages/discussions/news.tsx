@@ -4,7 +4,7 @@ import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
 import '../../styles/discussion.css';
 import PostPreviewNews from '../../components/discussion/PostPreviewNews';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User } from '../../functions/session';
 import { createThread, getErrorMessage, getThreads } from '../../functions/firebase_backend';
 
 interface Thread {

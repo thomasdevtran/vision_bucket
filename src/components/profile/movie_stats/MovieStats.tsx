@@ -4,7 +4,7 @@ import blue_circle from '../../../assets/circles/blue_circle.png';
 import yellow_circle from '../../../assets/circles/yellow_circle.png';
 import red_circle from '../../../assets/circles/red_circle.png';
 import grey_circle from '../../../assets/circles/grey_circle.png';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from '../../../functions/session';
 import { getWatchEntries, WatchEntry } from '../../../functions/firebase_backend';
 
 function MovieStats() {

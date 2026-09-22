@@ -1,3 +1,4 @@
+import { posterUrl } from '../../../functions/poster';
 import React, { useEffect, useState } from 'react';
 import { getMovieDetails, Movie } from '../../../functions/api_service';
 import onestar from '../../../assets/1star.png';
@@ -57,7 +58,7 @@ const MovieReviewCard: React.FC<MovieReviewCardProps> = ({ movieId, review, rati
           {movie ? (
             <>
               <img
-                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                src={posterUrl(movie.poster_path)}
                 alt={movie.title}
                 className="profile-review-poster"
               />

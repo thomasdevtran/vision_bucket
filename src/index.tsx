@@ -1,8 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Routes, Route } from 'react-router-dom';
 import './index.css';
 import './functions/firebase';
+import { DEMO_MODE } from './config';
+import DemoBanner from './components/DemoBanner';
+import About from './pages/about';
 import Home from './pages/home';
 import Auth from './pages/auth';
 import reportWebVitals from './reportWebVitals';
@@ -18,6 +21,9 @@ import ReviewsList from './pages/reviews_list';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
+const Router = DEMO_MODE ? HashRouter : BrowserRouter;
+if (DEMO_MODE) document.documentElement.classList.add('demo-mode');
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -26,10 +32,11 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
+        <Router>
+          {DEMO_MODE && <DemoBanner />}
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={DEMO_MODE ? <Navigate to="/" replace /> : <Auth />} />
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/discussion/general" element={<GeneralDiscussion />} />
             <Route path="/discussion/news" element={<News />} />
@@ -39,8 +46,10 @@ root.render(
             <Route path="/threads/:id" element={<ThreadDetails />} />
             <Route path="/show/:id" element={<MovieDetails />} />
             <Route path="/news-threads/:id" element={<ThreadNewsDetails />} />
+            <Route path="/about" element={<About />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
       </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../functions/firebase';
+import { User, onAuthStateChanged } from '../functions/session';
+import { getAuth } from '../functions/session';
+import { DEMO_MODE } from '../config';
+const auth = getAuth();
 
 interface AuthContextValue {
   user: User | null;
@@ -27,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const getToken = async (): Promise<string | null> => {
-    if (!user) return null;
+    if (!user || DEMO_MODE) return null;
     return user.getIdToken();
   };
 
