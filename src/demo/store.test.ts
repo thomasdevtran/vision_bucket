@@ -42,15 +42,61 @@ test('discussion and comment lifecycle persists across reads', async () => {
 
 test('invalid input is rejected without corrupting existing state', async () => {
   await expect(send('/reviews/posting', 'POST', { movieId: 550, content: ' ', rating: 7 })).rejects.toThrow();
-  expect(loadDemo().reviews).toHaveLength(2);
+  expect(loadDemo().reviews).toHaveLength(26);
 });
 
 test('reset restores seeds and leaves unrelated site storage intact', async () => {
   localStorage.setItem('unrelated-key', 'keep');
   await send('/reviews/sample-visitor-review', 'DELETE');
   resetDemo();
-  expect(loadDemo().reviews).toHaveLength(2);
+  expect(loadDemo().reviews).toHaveLength(26);
   expect(localStorage.getItem('unrelated-key')).toBe('keep');
   localStorage.setItem(DEMO_STORAGE_KEY, '{broken');
   expect(loadDemo().entries).toHaveLength(2);
+});
+
+test('historical sample community dates are stable, varied, and in 2024–2025', () => {
+  const first = loadDemo();
+  expect(loadDemo()).toEqual(first);
+  const dates = [
+    ...first.reviews.map(review => review.date),
+    ...first.discussions.flatMap(thread => [thread.Date, ...thread.Comments.map(comment => comment.date)]),
+    ...first.news.map(thread => thread.Date),
+  ];
+  expect(dates.every(date => Date.parse(date) >= Date.parse('2024-01-01') && Date.parse(date) < Date.parse('2026-01-01'))).toBe(true);
+  expect(new Set(first.reviews.map(review => review.date.slice(0, 4)))).toEqual(new Set(['2024', '2025']));
+  expect(new Set(first.reviews.map(review => review.date)).size).toBeGreaterThan(20);
+  expect(new Set(first.reviews.filter(review => review.uid !== 'portfolio-visitor').map(review => review.uid)).size).toBe(8);
+  expect(first.discussions.every(thread => thread.Comments.every(comment => Date.parse(comment.date) >= Date.parse(thread.Date)))).toBe(true);
+});
+
+test('community upgrade preserves visitor edits and deleted starter items without duplicates', async () => {
+  const old = loadDemo();
+  delete old.communityVersion;
+  old.reviews = old.reviews.filter(review => review.id === 'sample-community-review');
+  old.reviews.push({ id: 'visitor-existing', movieId: 550, uid: 'portfolio-visitor', Author: 'Portfolio Visitor', content: 'Keep my real review', rating: 3, date: '2026-09-22T10:00:00.000Z' });
+  old.entries[0].notes = 'Keep my private notes';
+  old.discussions = old.discussions.filter(thread => thread.id === 'weekend-picks');
+  old.discussions[0].Comments.push({ commentId: 'visitor-existing-comment', uid: 'portfolio-visitor', author: 'Portfolio Visitor', content: 'Keep my comment', date: '2026-09-22T10:00:00.000Z' });
+  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(old));
+
+  const upgraded = loadDemo();
+  expect(upgraded.entries).toEqual(old.entries);
+  expect(upgraded.reviews.find(review => review.id === 'visitor-existing')).toEqual(old.reviews[1]);
+  expect(upgraded.reviews.some(review => review.id === 'sample-visitor-review')).toBe(false);
+  expect(upgraded.discussions.some(thread => thread.id === 'visitor-thread')).toBe(false);
+  expect(upgraded.discussions[0].Comments).toContainEqual(old.discussions[0].Comments[1]);
+  expect(upgraded.reviews).toHaveLength(26);
+  expect(upgraded.discussions).toHaveLength(7);
+  await send('/reviews/visitor-existing', 'PATCH', { content: 'Still editable', rating: 4 });
+  expect(loadDemo().reviews).toHaveLength(26);
+  expect(new Set(loadDemo().reviews.map(review => review.id)).size).toBe(26);
+  expect(loadDemo().communityVersion).toBe(1);
+});
+
+test('new visitor reviews retain the real creation date', async () => {
+  const before = Date.now();
+  const { review } = await send('/reviews/posting', 'POST', { movieId: 27205, content: 'My new review', rating: 4 });
+  expect(Date.parse(review.date)).toBeGreaterThanOrEqual(before);
+  expect(Date.parse(review.date)).toBeLessThanOrEqual(Date.now());
 });

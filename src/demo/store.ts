@@ -1,31 +1,63 @@
 import type { AppReview, AppThread, WatchEntry, UserProfile, WatchStatus } from '../functions/firebase_backend';
+import { communityDiscussions, communityReviews } from './community';
 
 export const DEMO_STORAGE_KEY = 'vision-bucket-demo-v2';
 export const DEMO_UID = 'portfolio-visitor';
 const statuses: WatchStatus[] = ['Completed', 'Dropped', 'On_hold', 'Plan_to_watch', 'Rewatched'];
-interface DemoState { version: 2; entries: WatchEntry[]; reviews: AppReview[]; discussions: AppThread[]; news: AppThread[] }
-const stamp = '2026-09-01T12:00:00.000Z';
+interface DemoState { version: 2; communityVersion?: 1; entries: WatchEntry[]; reviews: AppReview[]; discussions: AppThread[]; news: AppThread[] }
+const stamp = '2024-03-04T12:00:00.000Z';
 const seed = (): DemoState => ({
   version: 2,
+  communityVersion: 1,
   entries: [
     { id: 'watch-157336', movieId: '157336', userId: DEMO_UID, status: 'Completed', rating: 4, watchedAt: stamp, notes: 'Loved the atmosphere and the ending.', progress: 100 },
     { id: 'watch-27205', movieId: '27205', userId: DEMO_UID, status: 'Plan_to_watch', notes: 'For the next movie night.' },
   ],
   reviews: [
     { id: 'sample-visitor-review', movieId: 157336, Author: 'Portfolio Visitor', uid: DEMO_UID, content: 'Sample review: Interstellar pairs a huge space adventure with a moving story about family.', rating: 4, date: stamp },
-    { id: 'sample-community-review', movieId: 27205, Author: 'Maya · sample member', uid: 'sample-maya', content: 'Sample review: Inception is a great pick for a double feature. There is always another detail to notice.', rating: 5, date: stamp },
+    { id: 'sample-community-review', movieId: 27205, Author: 'Maya · demo member', uid: 'sample-maya', content: 'Inception is a great pick for a double feature. There is always another detail to notice.', rating: 5, date: '2025-07-19T12:00:00.000Z' },
+    ...communityReviews.map(review => ({ ...review })),
   ],
   discussions: [
-    { id: 'weekend-picks', uid: 'sample-maya', Author: 'Maya · sample member', Date: stamp, Title: 'What makes a great movie-night double feature?', Description: 'I’m pairing Inception with Interstellar. What would you put together for your next movie night?', Comments: [{ commentId: 'sample-comment', uid: 'sample-jules', author: 'Jules · sample member', content: 'The Grand Budapest Hotel followed by Fantastic Mr. Fox.', date: stamp }] },
-    { id: 'visitor-thread', uid: DEMO_UID, Author: 'Portfolio Visitor', Date: stamp, Title: 'My first watchlist', Description: 'Interstellar was a great start. Next up: Inception. Add your own picks below!', Comments: [] },
+    { id: 'weekend-picks', uid: 'sample-maya', Author: 'Maya · demo member', Date: '2024-09-13T18:00:00.000Z', Title: 'What makes a great movie-night double feature?', Description: 'I’m pairing Inception with Interstellar. What would you put together for your next movie night?', Comments: [{ commentId: 'sample-comment', uid: 'sample-jules', author: 'Jules · demo member', content: 'The Grand Budapest Hotel followed by Fantastic Mr. Fox.', date: '2024-09-14T10:00:00.000Z' }] },
+    { id: 'visitor-thread', uid: DEMO_UID, Author: 'Portfolio Visitor', Date: '2025-03-22T12:00:00.000Z', Title: 'My first watchlist', Description: 'Interstellar was a great start. Next up: Inception. Add your own picks below!', Comments: [] },
+    ...communityDiscussions.map(thread => ({ ...thread, Comments: thread.Comments.map(comment => ({ ...comment })) })),
   ],
   news: [{ id: 'demo-guide', uid: 'sample-editor', Author: 'Vision Bucket', Date: stamp, Title: 'Welcome to the Vision Bucket screening room', Description: 'Explore real movies from TMDB, keep a watchlist, and leave a review. Movie discovery uses the live API; sample conversations and all your changes stay in this browser. Reset the demo any time to start fresh.', Comments: [] }],
 });
 
+// Upgrade sample content without resetting personal edits, deleted posts, or tracking.
+const upgradeCommunity = (state: DemoState): DemoState => {
+  if (state.communityVersion === 1) return state;
+  const defaults = seed();
+  const reviews = state.reviews.map(review => {
+    const fixture = defaults.reviews.find(item => item.id === review.id);
+    if (review.id === 'sample-community-review' && review.uid === 'sample-maya') return { ...fixture! };
+    if (review.id === 'sample-visitor-review' && fixture && review.content === fixture.content && review.rating === fixture.rating) {
+      return { ...review, date: fixture.date };
+    }
+    return review;
+  });
+  const reviewIds = new Set(reviews.map(review => review.id));
+  reviews.push(...communityReviews.filter(review => !reviewIds.has(review.id)).map(review => ({ ...review })));
+  const discussions = state.discussions.map(thread => {
+    const fixture = defaults.discussions.find(item => item.id === thread.id);
+    if (!fixture) return thread;
+    return { ...thread, Date: fixture.Date, Author: fixture.Author, Comments: thread.Comments.map(comment => {
+      const original = fixture.Comments.find(item => item.commentId === comment.commentId);
+      return original ? { ...comment, date: original.date, author: original.author } : comment;
+    }) };
+  });
+  const threadIds = new Set(discussions.map(thread => thread.id));
+  discussions.push(...defaults.discussions.filter(thread => thread.id.startsWith('sample-thread-') && !threadIds.has(thread.id)));
+  return { ...state, communityVersion: 1, reviews, discussions, news: state.news.map(thread =>
+    thread.id === 'demo-guide' ? { ...thread, Date: stamp } : thread) };
+};
+
 export const loadDemo = (): DemoState => {
   try {
     const value = JSON.parse(localStorage.getItem(DEMO_STORAGE_KEY) || 'null');
-    if (value?.version === 2 && ['entries', 'reviews', 'discussions', 'news'].every(key => Array.isArray(value[key]) && value[key].every((item: unknown) => item && typeof item === 'object'))) return value;
+    if (value?.version === 2 && ['entries', 'reviews', 'discussions', 'news'].every(key => Array.isArray(value[key]) && value[key].every((item: unknown) => item && typeof item === 'object'))) return upgradeCommunity(value);
   } catch { /* Unavailable or outdated storage starts a fresh session. */ }
   return seed();
 };

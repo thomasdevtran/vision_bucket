@@ -397,6 +397,7 @@ function MovieDetails() {
                         review={review.content}
                         author={review.Author}
                         rating={review.rating}
+                        date={review.date}
                         index={index}
                       />
                     )}

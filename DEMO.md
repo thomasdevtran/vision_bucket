@@ -22,6 +22,13 @@ No Firebase project or visitor sign-in is required in demo mode.
 
 Movie metadata, posters, search, and catalog ratings come live from TMDB through
 the movie API on Vercel. Community members, reviews, and discussions are sample data.
+Eight fictional members contribute 25 sample reviews across eight real films, plus
+one starter review owned by the portfolio visitor. Six additional discussion threads
+include sample replies. Dates are distributed through 2024–2025 and stay stable on
+reload. These fixtures illustrate past activity; they are not recovered database records.
+Existing browser sessions receive the new community samples without resetting
+visitor reviews, comments, deleted starter posts, or watch tracking. New visitor posts
+continue to use their actual creation date.
 Visitor changes are stored in `vision-bucket-demo-v2` in their browser's
 localStorage. Different visitors do not share data. Reset removes only that key.
 Browsers that block storage show an error when saving; clearing site data also
