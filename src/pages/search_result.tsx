@@ -65,7 +65,7 @@ function SearchResults() {
   
           <div className="movies-container">
             {error && <p className="error-text">{error}</p>}
-            {!error && movies.length === 0 && <p role="status">No movies match this search. Try another title, such as Orbit.</p>}
+            {!error && movies.length === 0 && <p role="status">No movies match this search. Try another title, such as Inception.</p>}
             <div className="movies-grid">
               {movies.map((movie) => (
                 <div 
