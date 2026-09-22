@@ -1,4 +1,3 @@
-import { DEMO_MODE } from '../config';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getMovieDetails, Movie } from '../functions/api_service';
@@ -431,7 +430,7 @@ function MovieDetails() {
             <h3>Movie snapshot</h3>
             <p>
               {movie.title} is currently sitting at a {movie.vote_average.toFixed(1)}/10 average rating
-              {DEMO_MODE ? ' in the sample catalog.' : ' on TMDB.'}
+              {' on TMDB.'}
             </p>
           </div>
 
