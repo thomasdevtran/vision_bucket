@@ -1,6 +1,6 @@
 # Vision Bucket
 
-[Open the public portfolio demo](https://vision-bucket-portfolio-demo.trollthomas5.chatgpt.site) — no sign-in required.
+[Open the public portfolio demo](https://thomasdevtran.github.io/vision_bucket/) — no sign-in required.
 
 A React + TypeScript movie-tracking and community app, paired with the Express/Firebase [backend](https://github.com/thomasdevtran/vision_bucket_backend).
 

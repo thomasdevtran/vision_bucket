@@ -1,6 +1,6 @@
 # Portfolio walkthrough
 
-[Open the public portfolio demo](https://vision-bucket-portfolio-demo.trollthomas5.chatgpt.site) — no sign-in required.
+[Open the public portfolio demo](https://thomasdevtran.github.io/vision_bucket/) — no sign-in required.
 
 Run `npm run demo` for development, or `npm run build:demo` followed by
 `npm run preview:demo` to inspect the exact static build at http://127.0.0.1:4173.
@@ -31,7 +31,27 @@ tokens to the API. Normal `npm start` / `npm run build` retain the live integrat
 News publishing and backend-only features (follows, diary, lists, recommendations,
 moderation, notifications, import/export) are outside this demo's interface.
 
-## Static hosting
+## GitHub Pages
+
+The public demo is hosted on GitHub Pages. The workflow in
+`.github/workflows/demo-pages.yml` tests, builds, and publishes each push to
+`codex/portfolio-demo`. Pages is configured to use GitHub Actions, with the
+`github-pages` environment allowing this demo branch. The workflow uses Pages
+metadata to set `PUBLIC_URL` so scripts, styles, and poster art load under
+`/vision_bucket/`. No Firebase or TMDB secrets are needed.
+
+To reproduce the Pages build locally in PowerShell:
+
+```powershell
+$env:PUBLIC_URL="/vision_bucket"
+npm run build:demo
+Remove-Item Env:PUBLIC_URL
+```
+
+For the root-path local preview, run `npm run build:demo` again without
+`PUBLIC_URL`, then `npm run preview:demo`.
+
+## Other static hosting
 
 Publish **only the contents of `build/`** after `npm run build:demo`. Hash routes
 support direct links and refreshes on static hosts without rewrite rules.
