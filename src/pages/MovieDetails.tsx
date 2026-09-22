@@ -6,7 +6,6 @@ import Header from '../components/header/header';
 import Footer from '../components/footer/footer';
 import ReviewCard from '../components/movie_details/reviews_card';
 import MoviePoster from '../components/movie_details/MoviePoster';
-import MovieOverview from '../components/movie_details/MovieOverview';
 import ReviewForm from '../components/movie_details/ReviewForm';
 import { getAuth, onAuthStateChanged, User } from '../functions/session';
 import blue_circle from '../assets/circles/blue_circle.png';
@@ -244,7 +243,7 @@ function MovieDetails() {
   }
 
   if (!movie) {
-    return <p>Loading...</p>;
+    return <div className="movie-details-page"><Header /><main className="details-layout"><p role="status">Loading movie details…</p></main><Footer /></div>;
   }
 
   return (
@@ -253,25 +252,18 @@ function MovieDetails() {
       <main className="details-layout">
         <section className="details-feed">
           <article className="movie-thread-card">
-            <div className="thread-topline">
-              <span className="thread-community">{movie.title}</span>
-              <span className="thread-separator">•</span>
-              <span className="thread-age">Movie discussion</span>
-            </div>
-
             <MoviePoster
               posterPath={movie.poster_path}
               title={movie.title}
               releaseDate={movie.release_date}
               voteAverage={movie.vote_average}
+              overview={movie.overview}
             />
-
-            <MovieOverview overview={movie.overview} />
 
             <div className="movie-actions">
               <div className="actions-heading">
                 <h2>Track this movie</h2>
-                <p>Set a status or add it to your list so it stays in your profile.</p>
+                <p>Save it to your library, with a rating or a note for later.</p>
               </div>
 
               <div className="movie-status-group">
@@ -351,10 +343,8 @@ function MovieDetails() {
           <section className="composer-card">
             <div className="section-heading">
               <div>
-                <p className="section-kicker">Share your take</p>
                 <h2>Write a review</h2>
               </div>
-              <p className="section-helper">Keep it thoughtful, short, and honest.</p>
             </div>
             <ReviewForm onSubmit={handleReviewSubmit} />
           </section>
@@ -362,7 +352,6 @@ function MovieDetails() {
           <section className="reviews-section">
             <div className="section-heading">
               <div>
-                <p className="section-kicker">Community reactions</p>
                 <h2>Reviews</h2>
               </div>
               <p className="section-helper">{firestoreReviews.length} posts</p>
@@ -370,7 +359,7 @@ function MovieDetails() {
 
             <div className="reviews-list">
               {firestoreReviews.length > 0 ? (
-                firestoreReviews.map((review, index) => (
+                firestoreReviews.map((review) => (
                   <div key={review.id} className="review-item">
                     {editingReviewId === review.id ? (
                       <div className="review-edit-form">
@@ -398,7 +387,6 @@ function MovieDetails() {
                         author={review.Author}
                         rating={review.rating}
                         date={review.date}
-                        index={index}
                       />
                     )}
                     {user && (review.isOwner || user.uid === review.uid) && editingReviewId !== review.id && (
@@ -425,37 +413,6 @@ function MovieDetails() {
           </section>
         </section>
 
-        <aside className="details-sidebar">
-          <div className="sidebar-card">
-            <p className="sidebar-label">Up next</p>
-            <h3>Movie snapshot</h3>
-            <p>
-              {movie.title} is currently sitting at a {movie.vote_average.toFixed(1)}/10 average rating
-              {' on TMDB.'}
-            </p>
-          </div>
-
-          <div className="sidebar-card">
-            <p className="sidebar-label">Posting style</p>
-            <h3>Keep it readable</h3>
-            <p>
-              Use short paragraphs and clear opinions. The feed works best when reviews feel like real
-              comments, not long form essays.
-            </p>
-          </div>
-
-          <div className="sidebar-card subtle">
-            <p className="sidebar-label">Status legend</p>
-            <ul className="status-legend">
-              {STATUS_OPTIONS.map((option) => (
-                <li key={option.value}>
-                  <img src={option.icon} alt="" className="status-icon" />
-                  {option.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
       </main>
       <Footer />
     </div>

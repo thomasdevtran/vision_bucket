@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, HashRouter, Navigate, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import './index.css';
 import './functions/firebase';
 import { DEMO_MODE } from './config';
@@ -24,6 +24,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 const Router = DEMO_MODE ? HashRouter : BrowserRouter;
 if (DEMO_MODE) document.documentElement.classList.add('demo-mode');
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -33,6 +39,7 @@ root.render(
     <ErrorBoundary>
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           {DEMO_MODE && <DemoBanner />}
           <Routes>
             <Route path="/" element={<Home />} />

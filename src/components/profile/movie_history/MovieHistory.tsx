@@ -1,6 +1,6 @@
 import { posterUrl } from '../../../functions/poster';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import '../../../styles/profile.css';
 import { getMovieDetails, Movie } from '../../../functions/api_service';
 import { getAuth, onAuthStateChanged } from '../../../functions/session';
@@ -15,7 +15,6 @@ function MovieHistory() {
     const [movies, setMovies] = useState<TrackedMovie[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const auth = getAuth();
@@ -43,44 +42,33 @@ function MovieHistory() {
         return () => unsubscribe();
     }, []);
 
-    const handleCardClick = (id: number) => {
-        navigate(`/show/${id}`);
-    };
-
     if (loading) {
         return <div>Loading...</div>;
     }
 
     return (
         <div className="movie-history">
-            <h1>Movie History</h1>
+            <h2 className="profile-section-title">Your films</h2>
             {error && <p className="history-error">{error}</p>}
             <div className='history-container'>
                 <div className="movies-grid">
                     {movies.map(({ movie, entry }) => (
-                        <div
+                        <Link
                             key={movie.id}
                             className="movie-card"
-                            onClick={() => handleCardClick(movie.id)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    handleCardClick(movie.id);
-                                }
-                            }}
+                            to={`/show/${movie.id}`}
                         >
                             <img
                                 src={posterUrl(movie.poster_path)}
-                                alt={movie.title}
+                                alt=""
                                 className="history-poster"
                             />
                             <h3>{movie.title}</h3>
-                            <p>{movie.release_date}</p>
+                            <p>{movie.release_date?.slice(0, 4)}</p>
                             <p>{entry.status.replace(/_/g, ' ')}</p>
                             {entry.rating !== undefined && <p>Your rating: {entry.rating}/5</p>}
                             {entry.progress !== undefined && <p>Progress: {entry.progress}%</p>}
-                        </div>
+                        </Link>
                     ))}
                     {!movies.length && !error && <p className="history-empty">Your tracked movies will appear here.</p>}
                 </div>

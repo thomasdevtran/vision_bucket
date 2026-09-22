@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import '../../../styles/profile.css';
-import blue_circle from '../../../assets/circles/blue_circle.png';
-import yellow_circle from '../../../assets/circles/yellow_circle.png';
-import red_circle from '../../../assets/circles/red_circle.png';
-import grey_circle from '../../../assets/circles/grey_circle.png';
 import { getAuth, onAuthStateChanged } from '../../../functions/session';
 import { getWatchEntries, WatchEntry } from '../../../functions/firebase_backend';
 
@@ -38,22 +34,15 @@ function MovieStats() {
 
     return (
         <div className="stats-card">
-            <h2>Movie Stats</h2>
-            <p>
-                <img src={blue_circle} alt="Blue Circle" className="circle-picture" />Completed: {count('Completed')}
-                <br />
-                <img src={yellow_circle} alt="Yellow Circle" className="circle-picture" />On-hold: {count('On_hold')}
-                <br />
-                <img src={red_circle} alt="Red Circle" className="circle-picture" />Dropped: {count('Dropped')}
-                <br />
-                <img src={grey_circle} alt="Grey Circle" className="circle-picture" />Plan to Watch: {count('Plan_to_watch')}
-                <br />
-                <br />
-                Tracked: {entries.length}
-                <br />
-                Rewatched: {count('Rewatched')}
-            </p>
-            {/* insert the pie chart somewhere */}
+            <h2>Your library at a glance</h2>
+            <dl className="library-stats">
+                <div><dt>Films tracked</dt><dd>{entries.length}</dd></div>
+                <div><dt>Completed</dt><dd>{count('Completed')}</dd></div>
+                <div><dt>Plan to watch</dt><dd>{count('Plan_to_watch')}</dd></div>
+                <div><dt>On hold</dt><dd>{count('On_hold')}</dd></div>
+                <div><dt>Rewatched</dt><dd>{count('Rewatched')}</dd></div>
+                <div><dt>Dropped</dt><dd>{count('Dropped')}</dd></div>
+            </dl>
         </div>
     );
 }

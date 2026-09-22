@@ -1,15 +1,10 @@
-.demo-banner { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:12px 4%; background:#19302f; color:#e3efed; font-size:13px; border-bottom:1px solid #365a55; }
-.demo-banner strong { color:#86ece0; font-size:11px; letter-spacing:1px; margin-right:12px; }
-.demo-banner > div { display:flex; align-items:center; flex-wrap:wrap; gap:14px; }
-.demo-banner a { color:#e3efed; text-decoration:underline; text-underline-offset:3px; }
-.demo-banner button { background:transparent; border:1px solid #6d948b; border-radius:5px; color:#fff; padding:6px 10px; cursor:pointer; }
-.demo-banner button:hover { background:#294a45; }
-.about-content { max-width:780px; margin:auto; line-height:1.8; }
-.about-content h2 { margin-top:32px; }
-.about-actions { display:flex; flex-wrap:wrap; gap:20px; margin-top:24px; }
-:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
-
-.demo-mode .header { position:sticky; top:0; }
-.demo-mode .page-main, .demo-mode .profile-main, .demo-mode .details-layout, .demo-mode .discussion-container, .demo-mode .reviews-main { padding-top:36px; margin-top:0; }
-.demo-mode .App { padding-top: 0; }
+.demo-banner { padding: 7px 24px; display: flex; justify-content: center; align-items: center; gap: 24px; background: #29252f; border-bottom: 1px solid var(--surface-border); color: #c3bdcc; font-size: .8rem; }
+.demo-banner strong { font-weight: 600; color: var(--text-primary); margin-right: 10px; }
+.demo-banner > div { display: flex; align-items: center; gap: 14px; }
+.demo-banner a { color: inherit; }
+.demo-banner button { padding: 0; border: 0; border-radius: 0; background: none; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.demo-banner p { margin: 0; }
+.about-content { max-width: 760px; line-height: 1.8; }
+.about-content h2 { margin-top: 30px; }
+.about-actions { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 24px; }
+@media (max-width: 640px) { .demo-banner { padding: 7px 16px; flex-wrap: wrap; justify-content: space-between; gap: 3px 14px; font-size: .75rem; } .demo-banner-detail { display: none; } }

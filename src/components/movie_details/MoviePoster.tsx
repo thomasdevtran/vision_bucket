@@ -1,14 +1,16 @@
 import { posterUrl } from '../../functions/poster';
 import React from 'react';
+import MovieOverview from './MovieOverview';
 
 interface MoviePosterProps {
   posterPath: string;
   title: string;
   releaseDate: string;
   voteAverage: number;
+  overview: string;
 }
 
-const MoviePoster: React.FC<MoviePosterProps> = ({ posterPath, title, releaseDate, voteAverage }) => {
+const MoviePoster: React.FC<MoviePosterProps> = ({ posterPath, title, releaseDate, voteAverage, overview }) => {
   return (
     <div className="movie-top-section">
       <div className="movie-poster">
@@ -18,9 +20,11 @@ const MoviePoster: React.FC<MoviePosterProps> = ({ posterPath, title, releaseDat
         />
       </div>
       <div className="movie-details-info">
-        <h1>{title}</h1>
-        <p><strong>Release Date:</strong> {releaseDate}</p>
-        <p><strong>Average Rating:</strong> {voteAverage}/10</p>
+        <div className="movie-title-group">
+          <h1>{title}</h1>
+          <p className="movie-detail-meta">{releaseDate?.slice(0, 4)} <span>★ {voteAverage.toFixed(1)} / 10 on TMDB</span></p>
+        </div>
+        <MovieOverview overview={overview} />
       </div>
     </div>
   );

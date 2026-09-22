@@ -134,7 +134,7 @@ function GeneralDiscussion() {
   return (
     <div className="discussion-page">
       <Header />
-      <div className="discussion-container">
+      <main className="discussion-container">
         <nav className="breadcrumb">
           <Link to="/discussion" className="breadcrumb-link">Discussion</Link>
           <span className="breadcrumb-separator"> &gt; </span>
@@ -146,8 +146,8 @@ function GeneralDiscussion() {
             Start a new topic or pick up an existing thread. Keep it friendly and stay on theme.
           </p>
         </section>
-        <main className="thread-creation">
-          <h2 className="thread-title">Create a Thread</h2>
+        <details className="thread-creation">
+          <summary>Start a discussion</summary>
           <form className="thread-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="title">Title</label>
@@ -174,13 +174,13 @@ function GeneralDiscussion() {
               />
             </div>
             <button className="create-thread-btn" disabled={submitting}>
-              {submitting ? 'CREATING…' : 'CREATE THREAD'}
+              {submitting ? 'Posting…' : 'Post discussion'}
             </button>
             {formError && <p className="discussion-form-error" role="alert">{formError}</p>}
           </form>
-        </main>
+        </details>
         <DiscussionPreviews threads={threads} onDeleteThread={handleDeleteThread} currentUid={userId} /> {/* Pass fetched threads */}
-      </div>
+      </main>
       <Footer />
     </div>
   );

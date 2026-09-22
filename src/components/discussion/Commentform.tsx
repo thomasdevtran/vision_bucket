@@ -24,6 +24,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
     <form className="comment-form" onSubmit={handleSubmit}>
       <textarea
         className="comment-input"
+        aria-label="Your comment"
         placeholder="Write your comment here..."
         value={commentText}
         onChange={(e) => setCommentText(e.target.value)}

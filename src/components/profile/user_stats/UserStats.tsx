@@ -51,17 +51,14 @@ function UserStats() {
     return (
         <div className="user-info-card">
             <img src={user_icon} alt="User Icon" className="profile-picture" />
-            <br />
-            <h2>{userData?.username || 'Guest'}</h2>
-            <br />
+            <div><h1>{userData?.username || 'Guest'}</h1>
             <p>
                 Last Online: {userData?.Last_online ? formatDate(userData.Last_online) : 'N/A'}
                 <br />
                 Joined: {userData?.Joined ? formatDate(userData.Joined) : 'N/A'}
                 <br />
-                <br />
                 Reviews: {userData?.reviews?.length || 0}
-            </p>
+            </p></div>
         </div>
     );
 }

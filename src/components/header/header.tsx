@@ -1,7 +1,7 @@
 import { DEMO_MODE } from '../../config';
 import React, { useState, useEffect } from 'react';
 import { getAuth, signOut } from '../../functions/session';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, NavLink } from 'react-router-dom';
 import '../../App.css';
 import '../../styles/header.css';
 import userIcon from '../../assets/userIcon.png';
@@ -68,18 +68,18 @@ function Header() {
         </div>
 
         <nav className="header-nav" aria-label="Main navigation">
-          <Link to="/" className="header-nav-link">Home</Link>
-          <Link to="/discussion" className="header-nav-link">Discussion</Link>
-          <Link to="/reviews" className="header-nav-link">Reviews</Link>
-          <Link to="/profile" className="header-nav-link">Profile</Link>
+          <NavLink to="/" end className="header-nav-link">Discover</NavLink>
+          <NavLink to="/discussion" className="header-nav-link">Discussions</NavLink>
+          <NavLink to="/reviews" className="header-nav-link">Reviews</NavLink>
+          <NavLink to="/profile" className="header-nav-link">Your library</NavLink>
         </nav>
 
         <div className="header-actions">
           <form className="search-container" onSubmit={handleSearch}>
-            <img src={searchIcon} alt="Search" className="search-icon" />
+            <img src={searchIcon} alt="" className="search-icon" />
             <input
               type="text"
-              placeholder="Search movie titles"
+              placeholder="Search films"
               aria-label="Search movie titles"
               className="search-input"
               value={searchQuery}

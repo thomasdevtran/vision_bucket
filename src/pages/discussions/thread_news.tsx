@@ -117,7 +117,7 @@ function ThreadNewsDetails() {
           <h1 className="thread-title">{thread.title}</h1>
           <div className="thread-meta">
             <span className="thread-author">By {thread.author}</span>
-            <span className="thread-date">{thread.date}</span>
+            <time className="thread-date" dateTime={thread.date}>{new Date(thread.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
           </div>
           <p className="thread-description">{thread.description}</p>
         </div>
@@ -131,7 +131,7 @@ function ThreadNewsDetails() {
                 <p className="discussion-comment">
                   <strong>{comment.author}:</strong> {comment.content}
                 </p>
-                <span className="comment-date">{comment.date}</span>
+                <time className="comment-date" dateTime={comment.date}>{new Date(comment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
               </div>
             ))
           ) : (
