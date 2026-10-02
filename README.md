@@ -1,5 +1,7 @@
 # Vision Bucket
 
+[![CI](https://github.com/thomasdevtran/vision_bucket/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thomasdevtran/vision_bucket/actions/workflows/ci.yml)
+
 A full-stack movie tracking and community platform. Discover films, track what
 you're watching, rate and review titles, and discuss them on community boards.
 
@@ -7,8 +9,30 @@ This repository is the **frontend** — a React + TypeScript single-page app. It
 talks to a separate [Express / Firestore backend](https://github.com/thomasdevtran/vision_bucket_backend)
 over a REST API and uses Firebase Authentication for sign-in.
 
-> **Live demo:** not currently hosted. See [Screenshots](#screenshots) below, or
-> follow [Getting started](#getting-started) to run it locally.
+**[Try the portfolio demo](https://thomasdevtran.github.io/vision_bucket/#/)** — no
+sign-in required. Movie discovery uses live TMDB data through a movie-only API;
+watch tracking, reviews, and discussions use sample data and browser-local storage.
+Visitor changes are not shared with other users or saved to the full backend.
+
+## Demo and full application
+
+| | Portfolio demo | Full application (`main`) |
+| --- | --- | --- |
+| Access | Public link above, no account | Firebase email/password sign-in |
+| Movie catalog | TMDB through the hosted movie-only API | TMDB through the configured Express backend |
+| User activity | Sample community; changes in this browser's localStorage | Authenticated API and Firestore persistence |
+| Source | [`codex/portfolio-demo`](https://github.com/thomasdevtran/vision_bucket/tree/codex/portfolio-demo) | This branch and the [backend](https://github.com/thomasdevtran/vision_bucket_backend) |
+
+The demo is a separate implementation branch, not the result of `npm start` on
+`main`. Clearing site data or using **Reset demo** removes your demo changes.
+Live movie browsing requires the hosted movie API to be available. The demo does
+not demonstrate shared accounts or backend authorization; those are covered by
+the full application's backend tests.
+
+For a quick walkthrough, browse a film, save a watch status, write a review, then
+refresh and open **Your library**. Explore the sample discussions and use
+**Reset demo** to start again. For implementation details and local demo commands,
+see the demo branch's [walkthrough](https://github.com/thomasdevtran/vision_bucket/blob/codex/portfolio-demo/DEMO.md).
 
 ---
 
@@ -16,8 +40,8 @@ over a REST API and uses Firebase Authentication for sign-in.
 
 ![Sign in to Vision Bucket](docs/screenshots/auth.png)
 
-More screenshots (home, movie details, profile, discussions) can be added to
-[`docs/screenshots/`](docs/screenshots) and referenced here.
+This screenshot shows the full application's sign-in screen. The public demo
+opens directly into movie discovery.
 
 ## Features
 
@@ -50,7 +74,7 @@ flowchart LR
     SPA -->|ID token sign-in| FB[Firebase Auth]
     SPA -->|REST + Bearer token| API[Express API]
     API --> FS[(Firestore)]
-    API -.->|movie proxy - offline| TMDB[(Movie catalog / TMDB)]
+    API -->|server-side movie proxy| TMDB[(TMDB movie catalog)]
 ```
 
 The SPA authenticates against Firebase Auth, then attaches the resulting Firebase
@@ -62,7 +86,7 @@ Firestore security rules deny all direct client access.
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 22 and npm 10 (the CI toolchain)
 - A [Firebase project](https://console.firebase.google.com/) with Email/Password
   authentication enabled
 - The [backend server](https://github.com/thomasdevtran/vision_bucket_backend)
@@ -71,9 +95,9 @@ Firestore security rules deny all direct client access.
 ### Install
 
 ```bash
-git clone https://github.com/trollbro71/vision_bucket.git
+git clone https://github.com/thomasdevtran/vision_bucket.git
 cd vision_bucket
-npm install
+npm ci
 ```
 
 ### Configure
@@ -97,18 +121,18 @@ npm run build # production build into ./build
 
 ## Movie data
 
-Movie discovery and search call the backend under `/api/movies/*`. In the original
-deployment these routes were served by a hosted movie-catalog proxy (backed by
-TMDB). **That proxy is not currently deployed**, so movie browsing/search will
-return errors until a proxy is running behind `/api/movies/*`. Every other feature
-(auth, reviews, discussions, profiles, watch tracking) runs against the included
-Express backend. The frontend handles the missing proxy gracefully by showing an
-error message rather than crashing.
+Movie discovery and search call the companion backend under `/api/movies/*`.
+The backend includes a TMDB proxy with validation, caching, and retries. Configure
+`TMDB_ACCESS_TOKEN` (or `TMDB_API_KEY`) on the backend, and point the frontend's
+`REACT_APP_API_URL` at that backend. Never put TMDB or Firebase Admin credentials
+in frontend environment variables. Without a configured provider, movie routes
+return a structured error and the UI displays an error message.
 
 ## Testing
 
 ```bash
 npm test -- --watchAll=false
+npm run build
 ```
 
 Tests cover the movie API service's request contract
@@ -117,6 +141,25 @@ review-form validation
 ([`src/components/movie_details/ReviewForm.test.tsx`](src/components/movie_details/ReviewForm.test.tsx)).
 CI runs install → test → build on every push and pull request
 ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+The production build also runs Create React App's ESLint and TypeScript checks;
+CI treats build warnings as failures. After dependency changes, regenerate the
+lockfile with npm 10 and verify `npm ci` before committing both package files.
+
+## Reviewer guide
+
+- [Movie API client](src/functions/api_service.tsx): typed request contracts and
+  safe API error messages, with focused [tests](src/functions/api_service.test.tsx).
+- [Backend client](src/functions/firebase_backend.ts): authenticated activity
+  requests; the backend enforces authorization and ownership.
+- [Review form](src/components/movie_details/ReviewForm.tsx): validation and
+  submission feedback, with [tests](src/components/movie_details/ReviewForm.test.tsx).
+- [Backend integration tests](https://github.com/thomasdevtran/vision_bucket_backend/blob/main/test/integration/api.emulator.test.js):
+  Firebase emulator coverage of authentication and cross-user access.
+
+The frontend suite is focused unit/component coverage, not a complete end-to-end
+test of every screen. The browser-local demo is a portfolio preview, not evidence
+of production scale or real community activity.
 
 ## Project structure
 
